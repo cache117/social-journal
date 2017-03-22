@@ -19,6 +19,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".AddNote"
+            android:label="@string/title_activity_add_note"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".AddPicture"
+            android:label="@string/title_activity_add_picture"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".Calendar"></activity>
     </application>
 
 </manifest>
