@@ -5,24 +5,24 @@
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_home_black_24dp"
-            android:title="Home" />
+            android:title="@string/go_home_text" />
         <item
             android:id="@+id/nav_add_note"
             android:icon="@drawable/ic_insert_drive_file_black_24dp"
-            android:title="Add Note" />
+            android:title="@string/add_note_text" />
         <item
             android:id="@+id/nav_add_picture"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Add Picture" />
+            android:title="@string/add_picture_text" />
         <item
-            android:id="@+id/nav_show_calendadr"
+            android:id="@+id/nav_show_calendar"
             android:icon="@drawable/ic_date_range_black_24dp"
-            android:title="Show Calendar" />
+            android:title="@string/show_calendar_text" />
     </group>
 
     <item
         android:id="@+id/nav_settings"
         android:icon="@drawable/ic_settings_applications_black_24dp"
-        android:title="Settings" />
+        android:title="@string/launch_settings_text" />
 
 </menu>

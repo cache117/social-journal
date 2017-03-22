@@ -7,4 +7,10 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_add_note">AddNote</string>
     <string name="title_activity_add_picture">AddPicture</string>
+    <string name="title_activity_calendar">Select a Date</string>
+    <string name="add_note_text">Add Note</string>
+    <string name="add_picture_text">Add Picture</string>
+    <string name="show_calendar_text">Show Calendar</string>
+    <string name="launch_settings_text">Settings</string>
+    <string name="go_home_text">Home</string>
 </resources>

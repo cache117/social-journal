@@ -1,4 +1,4 @@
-package com.example.michael.socialjournal;
+package edu.byu.cs456.journall.social_journal;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.example.michael.socialjournal", appContext.getPackageName());
+        assertEquals("edu.byu.cs456.journall.social_journal", appContext.getPackageName());
     }
 }

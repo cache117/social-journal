@@ -1,4 +1,4 @@
-package com.example.michael.socialjournal;
+package edu.byu.cs456.journall.social_journal;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -6,6 +6,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+
+import com.example.michael.socialjournal.R;
 
 public class AddPicture extends AppCompatActivity {
 

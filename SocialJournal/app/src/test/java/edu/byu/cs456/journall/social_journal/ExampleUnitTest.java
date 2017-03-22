@@ -1,4 +1,4 @@
-package com.example.michael.socialjournal;
+package edu.byu.cs456.journall.social_journal;
 
 import org.junit.Test;
 

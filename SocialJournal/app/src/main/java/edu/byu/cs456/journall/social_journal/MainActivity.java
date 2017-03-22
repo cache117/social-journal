@@ -1,4 +1,4 @@
-package com.example.michael.socialjournal;
+package edu.byu.cs456.journall.social_journal;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.example.michael.socialjournal.R;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -86,7 +88,7 @@ public class MainActivity extends AppCompatActivity
             //send to note page
         } else if (id == R.id.nav_add_picture) {
             //send to picture page
-        } else if (id == R.id.nav_show_calendadr) {
+        } else if (id == R.id.nav_show_calendar) {
             //send to calendar page
         } else if (id == R.id.nav_settings) {
             //send to settings page
