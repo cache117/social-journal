@@ -30,7 +30,7 @@
             android:parentActivityName="edu.byu.cs456.journall.social_journal.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".NoteCalendar"
+            android:name=".JournalCalendar"
             android:label="@string/title_activity_calendar"
             android:parentActivityName="edu.byu.cs456.journall.social_journal.MainActivity" />
     </application>

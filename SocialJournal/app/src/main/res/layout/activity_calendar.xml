@@ -4,12 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.byu.cs456.journall.social_journal.NoteCalendar">
+    tools:context="edu.byu.cs456.journall.social_journal.JournalCalendar">
 
     <CalendarView
         android:id="@+id/calendar"
-        android:layout_width="368dp"
-        android:layout_height="495dp"
-        android:layout_margin="10dp"/>
+        android:layout_width="384dp"
+        android:layout_height="511dp"
+        tools:layout_editor_absoluteY="-2dp"
+        tools:layout_editor_absoluteX="0dp" />
 
 </android.support.constraint.ConstraintLayout>
