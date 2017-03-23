@@ -14,8 +14,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.example.michael.socialjournal.R;
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -110,7 +108,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showCalendar() {
-        Intent calendar = new Intent(this, Calendar.class);
+        Intent calendar = new Intent(this, NoteCalendar.class);
         startActivity(calendar);
     }
 
