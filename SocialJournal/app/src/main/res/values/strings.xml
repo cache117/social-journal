@@ -13,4 +13,7 @@
     <string name="show_calendar_text">Show Calendar</string>
     <string name="launch_settings_text">Settings</string>
     <string name="go_home_text">Home</string>
+    <string name="allow_facebook_title">Allow Facebook?</string>
+    <string name="allow_instagram_title">Allow Instagram?</string>
+    <string name="allow_twitter_title">Allow Twitter?</string>
 </resources>
