@@ -1,7 +1,10 @@
 package edu.byu.cs456.journall.social_journal;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -13,9 +16,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    static final int SELECT_IMAGE = 1;
+    static final int SELECT_DATE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +79,6 @@ public class MainActivity extends AppCompatActivity
             openSettings();
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -79,26 +86,63 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
-        if (id == R.id.nav_home) {
-            navigateHome();
-            // send to home
-        } else if (id == R.id.nav_add_note) {
-            addNote();
-            //send to note page
-        } else if (id == R.id.nav_add_picture) {
-            addPicture();
-            //send to picture page
-        } else if (id == R.id.nav_show_calendar) {
-            showCalendar();
-            //send to calendar page
-        } else if (id == R.id.nav_settings) {
-            //send to settings page
-            openSettings();
+        switch (id) {
+            case R.id.nav_home:
+                navigateHome();
+                // send to home
+                break;
+            case R.id.nav_add_note:
+                addNote();
+                //send to note page
+                break;
+            case R.id.nav_add_picture:
+                addPicture();
+                //send to picture page
+                break;
+            case R.id.nav_show_calendar:
+                showCalendar();
+                //send to calendar page
+                break;
+            case R.id.nav_settings:
+                //send to settings page
+                openSettings();
+                break;
         }
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case SELECT_IMAGE:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        try {
+                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
+                            addNewImage(bitmap);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (resultCode == Activity.RESULT_CANCELED) {
+                    Toast.makeText(getApplicationContext(), "Cancelled", Toast.LENGTH_SHORT).show();
+                }
+            case SELECT_DATE:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        int year = data.getIntExtra("YEAR", -1);
+                        int month = data.getIntExtra("MONTH", -1);
+                        int day = data.getIntExtra("DAY", -1);
+                        if (year != -1 && month != -1 && day != -1) {
+                            navigateToDay(year, month, day);
+                        }
+                    }
+                }
+        }
     }
 
     private void openSettings() {
@@ -108,12 +152,16 @@ public class MainActivity extends AppCompatActivity
 
     private void showCalendar() {
         Intent calendar = new Intent(this, JournalCalendar.class);
-        startActivity(calendar);
+        startActivityForResult(calendar, SELECT_DATE);
     }
 
     private void addPicture() {
-        Intent pictures = new Intent(this, AddPicture.class);
-        startActivity(pictures);
+//        Intent pictures = new Intent(this, AddPicture.class);
+//        startActivity(pictures);
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);//
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_IMAGE);
     }
 
     private void addNote() {
@@ -124,5 +172,13 @@ public class MainActivity extends AppCompatActivity
     private void navigateHome() {
         Intent home = new Intent(this, MainActivity.class);
         startActivity(home);
+    }
+
+    private void addNewImage(Bitmap image) {
+        Toast.makeText(getApplicationContext(), "Inserting Picture", Toast.LENGTH_LONG).show();
+    }
+
+    private void navigateToDay(int year, int month, int day) {
+        Toast.makeText(getApplicationContext(), day + "/" + month + "/" + year, Toast.LENGTH_LONG).show();
     }
 }
