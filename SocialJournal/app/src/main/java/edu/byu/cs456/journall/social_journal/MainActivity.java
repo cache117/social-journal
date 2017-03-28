@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity
 
         posts = getPosts();
 
-        adapter = new MyAdapter(posts);
+        adapter = new MyAdapter(posts, this);
         myRecyclerView.setAdapter(adapter);
     }
 

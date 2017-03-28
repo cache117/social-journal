@@ -1,7 +1,9 @@
 package edu.byu.cs456.journall.social_journal;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     private String[] mDataset;
+    private Context mContext;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -31,8 +34,10 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public MyAdapter(String[] myDataset) {
+    public MyAdapter(String[] myDataset, Context context) {
+
         mDataset = myDataset;
+        mContext = context;
     }
 
     // Create new views (invoked by the layout manager)
@@ -62,9 +67,22 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         //TODO not sure what to do with this yet...
         String post = mDataset[position];
 
-        holder.mWebView.getSettings().setLoadWithOverviewMode(true);
-        holder.mWebView.getSettings().setUseWideViewPort(true);
+//        holder.mWebView.getSettings().setLoadWithOverviewMode(true);
+//        holder.mWebView.getSettings().setUseWideViewPort(true);
+        holder.mWebView.setInitialScale(getScale());
         holder.mWebView.loadDataWithBaseURL("https://facebook.com", post, "text/html", "utf-8", null);
+    }
+
+    private int getScale(){
+        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        Double val = new Double(width)/new Double(500);
+        val = val * 100d;
+        return val.intValue();
     }
 
     // Return the size of your dataset (invoked by the layout manager)
