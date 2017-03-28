@@ -16,4 +16,6 @@
     <string name="allow_facebook_title">Allow Facebook?</string>
     <string name="allow_instagram_title">Allow Instagram?</string>
     <string name="allow_twitter_title">Allow Twitter?</string>
+
+    <string name="facebook_app_id">121029951766180</string>
 </resources>

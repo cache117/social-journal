@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -16,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.WebView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -24,6 +27,12 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     static final int SELECT_IMAGE = 1;
     static final int SELECT_DATE = 2;
+
+    private RecyclerView myRecyclerView;
+    private RecyclerView.Adapter adapter;
+    private RecyclerView.LayoutManager layoutManager;
+
+    private String[] posts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +50,25 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        //Javascript that https://developers.facebook.com/docs/plugins/embedded-posts said was necessary
+        //It is not necessary when clicking "embed" on a post but it might be needed
+        //if we change the way we embed pictures to use the Graph API
+//        WebView init = (WebView) findViewById(R.id.init_js);
+//        String initData = "<div id=\"fb-root\"></div>\n" +
+//                "<script>(function(d, s, id) {\n" +
+//                "  var js, fjs = d.getElementsByTagName(s)[0];\n" +
+//                "  if (d.getElementById(id)) return;\n" +
+//                "  js = d.createElement(s); js.id = id;\n" +
+//                "  js.src = \"//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.8&appId=121029951766180\";\n" +
+//                "  fjs.parentNode.insertBefore(js, fjs);\n" +
+//                "}(document, 'script', 'facebook-jssdk'));</script>";
+//        init.loadData(initData, "text/html", null);
+
+        //Funny post about stress
+//        WebView firstPost = (WebView) findViewById(R.id.post1);
+//        String data = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+//        firstPost.loadDataWithBaseURL("https://www.facebook.com/", data, "text/html", "utf-8", null);
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -49,6 +77,30 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        myRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
+        myRecyclerView.setHasFixedSize(true);
+
+        layoutManager = new LinearLayoutManager(this);
+        myRecyclerView.setLayoutManager(layoutManager);
+
+        posts = getPosts();
+
+        adapter = new MyAdapter(posts);
+        myRecyclerView.setAdapter(adapter);
+    }
+
+    private String[] getPosts() {
+        String[] listOfPosts = new String[5];
+
+        listOfPosts[0] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts[1] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts[2] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts[3] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts[4] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+
+        return listOfPosts;
     }
 
     @Override
