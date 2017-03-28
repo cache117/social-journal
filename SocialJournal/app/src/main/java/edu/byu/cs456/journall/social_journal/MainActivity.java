@@ -182,6 +182,7 @@ public class MainActivity extends AppCompatActivity
                 } else if (resultCode == Activity.RESULT_CANCELED) {
                     Toast.makeText(getApplicationContext(), "Cancelled", Toast.LENGTH_SHORT).show();
                 }
+                break;
             case SELECT_DATE:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
@@ -193,15 +194,17 @@ public class MainActivity extends AppCompatActivity
                         }
                     }
                 }
+                break;
             case ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
                         String newNote = data.getStringExtra("NOTE");
-                        if (!newNote.isEmpty()) {
+                        if (newNote != null && !newNote.isEmpty()) {
                             addNewNote(newNote);
                         }
                     }
                 }
+                break;
         }
     }
 
