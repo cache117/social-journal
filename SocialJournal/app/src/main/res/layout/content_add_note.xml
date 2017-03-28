@@ -8,4 +8,13 @@
     tools:context="edu.byu.cs456.journall.social_journal.AddNote"
     tools:showIn="@layout/activity_add_note">
 
+    <EditText
+        android:id="@+id/new_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine|textCapSentences|textLongMessage"
+        android:minLines="15"
+        android:gravity="top|start"
+        android:scrollbars="vertical"/>
+
 </android.support.constraint.ConstraintLayout>

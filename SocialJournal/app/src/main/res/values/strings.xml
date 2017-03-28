@@ -12,6 +12,7 @@
     <string name="add_picture_text">Add Picture</string>
     <string name="show_calendar_text">Show Calendar</string>
     <string name="launch_settings_text">Settings</string>
+    <string name="action_save">Save Note</string>
     <string name="go_home_text">Home</string>
     <string name="allow_facebook_title">Allow Facebook?</string>
     <string name="allow_instagram_title">Allow Instagram?</string>

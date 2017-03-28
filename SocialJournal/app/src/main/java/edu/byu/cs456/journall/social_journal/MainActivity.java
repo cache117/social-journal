@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     static final int SELECT_IMAGE = 1;
     static final int SELECT_DATE = 2;
+    static final int ADD_NOTE = 3;
 
     private RecyclerView myRecyclerView;
     private RecyclerView.Adapter adapter;
@@ -41,14 +43,11 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        // Get a support ActionBar corresponding to this toolbar
+        ActionBar ab = getSupportActionBar();
+
+        // Enable the Up button
+        ab.setDisplayHomeAsUpEnabled(true);
 
         //Javascript that https://developers.facebook.com/docs/plugins/embedded-posts said was necessary
         //It is not necessary when clicking "embed" on a post but it might be needed
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity
 
         myRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-        myRecyclerView.setHasFixedSize(true);
+        myRecyclerView.setHasFixedSize(false);
 
         layoutManager = new LinearLayoutManager(this);
         myRecyclerView.setLayoutManager(layoutManager);
@@ -194,7 +193,20 @@ public class MainActivity extends AppCompatActivity
                         }
                     }
                 }
+            case ADD_NOTE:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        String newNote = data.getStringExtra("NOTE");
+                        if (!newNote.isEmpty()) {
+                            addNewNote(newNote);
+                        }
+                    }
+                }
         }
+    }
+
+    private void addNewNote(String newNote) {
+        Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
     }
 
     private void openSettings() {
@@ -218,7 +230,7 @@ public class MainActivity extends AppCompatActivity
 
     private void addNote() {
         Intent newNote = new Intent(this, AddNote.class);
-        startActivity(newNote);
+        startActivityForResult(newNote, ADD_NOTE);
     }
 
     private void navigateHome() {
