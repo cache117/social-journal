@@ -1,9 +1,12 @@
 package edu.byu.cs456.journall.social_journal;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.TextView;
 
@@ -59,6 +62,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         //TODO not sure what to do with this yet...
         String post = mDataset[position];
 
+        holder.mWebView.getSettings().setLoadWithOverviewMode(true);
+        holder.mWebView.getSettings().setUseWideViewPort(true);
         holder.mWebView.loadDataWithBaseURL("https://facebook.com", post, "text/html", "utf-8", null);
     }
 
