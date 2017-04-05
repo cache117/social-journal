@@ -23,6 +23,8 @@ import android.webkit.WebView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
 
-    private String[] posts;
+    private List<String> posts = getPosts();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,20 +86,24 @@ public class MainActivity extends AppCompatActivity
         layoutManager = new LinearLayoutManager(this);
         myRecyclerView.setLayoutManager(layoutManager);
 
-        posts = getPosts();
+        //posts = getPosts();
 
         adapter = new MyAdapter(posts, this);
         myRecyclerView.setAdapter(adapter);
     }
 
-    private String[] getPosts() {
-        String[] listOfPosts = new String[5];
+    /**
+     * Initializes posts displayed on home page
+     * @return List of Strings. Strings represent each post.
+     */
+    private List<String> getPosts() {
+        List<String> listOfPosts = new ArrayList<String>();
 
-        listOfPosts[0] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        listOfPosts[1] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        listOfPosts[2] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        listOfPosts[3] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        listOfPosts[4] = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
 
         return listOfPosts;
     }
@@ -210,6 +216,7 @@ public class MainActivity extends AppCompatActivity
 
     private void addNewNote(String newNote) {
         Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
+        posts.add(0, newNote);
     }
 
     private void openSettings() {
