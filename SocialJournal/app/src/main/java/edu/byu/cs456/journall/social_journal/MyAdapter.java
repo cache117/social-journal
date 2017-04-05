@@ -1,8 +1,11 @@
 package edu.byu.cs456.journall.social_journal;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -10,9 +13,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.WebView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Michael on 3/27/2017.
@@ -53,6 +59,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         }
     }
 
+    public static class ViewHolder2 extends MyAdapter.ViewHolder {
+        public ImageView mImageView;
+
+        public ViewHolder2(View v) {
+            super(v);
+            mImageView = (ImageView) v.findViewById(R.id.image_view);
+        }
+    }
+
     // Provide a suitable constructor (depends on the kind of dataset)
     public MyAdapter(List<String> myDataset, Context context) {
 
@@ -78,6 +93,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             case 1: View v1 = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.text_view, parent, false);
                     return new ViewHolder1(v1);
+            case 2: View v2 = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.image_view, parent, false);
+                    return new ViewHolder2(v2);
             default: return null;
         }
     }
@@ -104,6 +122,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             case 1: ViewHolder1 holder1 = (ViewHolder1) holder;
                     holder1.mTextView.setText(post);
                     break;
+            case 2: ViewHolder2 holder2 = (ViewHolder2) holder;
+                    Bitmap image = StringToBitMap(post.substring(16));
+                    holder2.mImageView.setImageBitmap(image);
         }
 
     }
@@ -116,7 +137,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         if (item.length() > 6 && item.substring(0, 7).equals("<iframe")){
             return 0;
         }
-        //if it's not a WebView, display the string in a TextView
+        //if there is no whitespace it is a bitmap for an image
+        else if (item.length() > 16 && item.substring(0, 16).equals("THIS IS A BITMAP")){
+            return 2;
+        }
+        //if it's not a WebView or bitmap, display the string in a TextView
         else {
             return 1;
         }
@@ -138,5 +163,16 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return mDataset.size();
+    }
+
+    private Bitmap StringToBitMap(String encodedString){
+        try {
+            byte [] encodeByte= Base64.decode(encodedString,Base64.DEFAULT);
+            Bitmap bitmap= BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+            return bitmap;
+        } catch(Exception e) {
+            e.getMessage();
+            return null;
+        }
     }
 }

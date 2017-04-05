@@ -10,6 +10,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,6 +24,7 @@ import android.view.MenuItem;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -249,10 +252,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addNewImage(Bitmap image) {
-        Toast.makeText(getApplicationContext(), "Inserting Picture", Toast.LENGTH_LONG).show();
+        String imageAsString = BitMapToString(image);
+        String preface = "THIS IS A BITMAP"; //insert this before the bits in a bitmap
+        posts.add(0, preface + imageAsString);
+        Log.d("Debug", "imageAsString == " + imageAsString);
+        Toast.makeText(getApplicationContext(), "Adding Image", Toast.LENGTH_LONG).show();
     }
 
     private void navigateToDay(int year, int month, int day) {
         Toast.makeText(getApplicationContext(), day + "/" + month + "/" + year, Toast.LENGTH_LONG).show();
+    }
+
+    private String BitMapToString(Bitmap bitmap){
+        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
+        byte [] b=baos.toByteArray();
+        String temp= Base64.encodeToString(b, Base64.DEFAULT);
+        return temp;
     }
 }
