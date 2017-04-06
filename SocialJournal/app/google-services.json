@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "120130621499",
+    "firebase_url": "https://socialjournal-7aa8c.firebaseio.com",
+    "project_id": "socialjournal-7aa8c",
+    "storage_bucket": "socialjournal-7aa8c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120130621499:android:9be61859408fb9d0",
+        "android_client_info": {
+          "package_name": "edu.byu.cs456.journall.social_journal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "120130621499-on61dgb9eb6qlu38dnofildnanomr6bf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.byu.cs456.journall.social_journal",
+            "certificate_hash": "3ba9094d7bf480d77ec793b07dd2a487e8f3840e"
+          }
+        },
+        {
+          "client_id": "120130621499-nikc0pb19eplqqschkp886g7u5lnstvc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQHMp_Ajo6INnyJCs2Q92Fu-imE_KUoUY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "120130621499-nikc0pb19eplqqschkp886g7u5lnstvc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
