@@ -29,6 +29,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     static final int SELECT_IMAGE = 1;
@@ -40,6 +50,8 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.LayoutManager layoutManager;
 
     private List<String> posts = getPosts();
+
+    CallbackManager mCallbackManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +105,30 @@ public class MainActivity extends AppCompatActivity
 
         adapter = new MyAdapter(posts, this);
         myRecyclerView.setAdapter(adapter);
+
+//        mCallbackManager = CallbackManager.Factory.create();
+//        LoginManager.getInstance().registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+//            @Override
+//            public void onSuccess(LoginResult loginResult) {
+//
+//            }
+//
+//            @Override
+//            public void onCancel() {
+//
+//            }
+//
+//            @Override
+//            public void onError(FacebookException error) {
+//
+//            }
+//        });
+
+//        if (AccessToken.getCurrentAccessToken() == null)
+//        {
+//            Intent login = new Intent(this, MainActivity.class);
+//            startActivity(login);
+//        }
     }
 
     /**
@@ -207,9 +243,10 @@ public class MainActivity extends AppCompatActivity
             case ADD_NOTE:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
+                        String noteTitle = data.getStringExtra("TITLE");
                         String newNote = data.getStringExtra("NOTE");
-                        if (newNote != null && !newNote.isEmpty()) {
-                            addNewNote(newNote);
+                        if (noteTitle != null && !noteTitle.isEmpty() && newNote != null && !newNote.isEmpty()) {
+                            addNewNote(noteTitle, newNote);
                         }
                     }
                 }
@@ -217,14 +254,15 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void addNewNote(String newNote) {
+    private void addNewNote(String noteTitle, String newNote) {
+        //TODO figure out how to add the note Title.
         Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
         posts.add(0, newNote);
     }
 
     private void openSettings() {
-        //Intent settings = new Intent(this, Settings.class);
-//        startActivity(settings);
+        Intent settings = new Intent(this, SettingsActivity.class);
+        startActivity(settings);
     }
 
     private void showCalendar() {

@@ -8,13 +8,37 @@
     tools:context="edu.byu.cs456.journall.social_journal.AddNote"
     tools:showIn="@layout/activity_add_note">
 
-    <EditText
-        android:id="@+id/new_note"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textMultiLine|textCapSentences|textLongMessage"
-        android:minLines="15"
-        android:gravity="top|start"
-        android:scrollbars="vertical"/>
+        android:orientation="vertical">
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <EditText
+                android:id="@+id/note_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/note_title_hint"
+                android:maxLines="1" />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <EditText
+                android:id="@+id/new_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:hint="@string/note_hint"
+                android:inputType="textMultiLine|textCapSentences|textLongMessage"
+                android:minLines="15"
+                android:scrollbars="vertical" />
+        </android.support.design.widget.TextInputLayout>
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

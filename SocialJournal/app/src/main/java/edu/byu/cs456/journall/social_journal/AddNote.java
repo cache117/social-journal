@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 public class AddNote extends AppCompatActivity {
     private String note;
+    private String title;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +62,11 @@ public class AddNote extends AppCompatActivity {
     }
 
     private void saveNote() {
+        title = ((EditText) findViewById(R.id.note_title)).getText().toString();
         note = ((EditText) findViewById(R.id.new_note)).getText().toString();
         if (!note.isEmpty()) {
             Intent data = new Intent(this, MainActivity.class);
+            data.putExtra("TITLE", note);
             data.putExtra("NOTE", note);
             setResult(Activity.RESULT_OK, data);
             finish();
