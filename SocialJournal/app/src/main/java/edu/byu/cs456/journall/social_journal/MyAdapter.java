@@ -125,6 +125,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             case 2: ViewHolder2 holder2 = (ViewHolder2) holder;
                     Bitmap image = StringToBitMap(post.substring(16));
                     holder2.mImageView.setImageBitmap(image);
+                    break;
         }
 
     }

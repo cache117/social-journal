@@ -109,4 +109,6 @@
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="note_title_hint">Title</string>
     <string name="note_hint">Add your note here</string>
+    <string name="authors">Michael Call &amp; Cache Staheli</string>
+    <string name="image_view_descr">Added image</string>
 </resources>
