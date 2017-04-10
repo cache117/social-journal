@@ -44,7 +44,7 @@
             android:name=".LoginActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login"
-            android:noHistory="true" />
+            android:noHistory="false" />
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" />
