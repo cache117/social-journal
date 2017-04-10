@@ -248,6 +248,9 @@ public class MainActivity extends AppCompatActivity
                         if (noteTitle != null && !noteTitle.isEmpty() && newNote != null && !newNote.isEmpty()) {
                             addNewNote(noteTitle, newNote);
                         }
+                        else if (newNote != null && !newNote.isEmpty()){
+                            addNewNote(null, newNote);
+                        }
                     }
                 }
                 break;
@@ -255,9 +258,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addNewNote(String noteTitle, String newNote) {
-        //TODO figure out how to add the note Title.
         Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
-        posts.add(0, newNote);
+        String titleAndBody;
+        Log.d("NOTE", "noteTitle is " + noteTitle);
+        if(noteTitle != null) {
+            titleAndBody = noteTitle + "(@)" + newNote;
+        }
+        else{
+            titleAndBody = newNote;
+        }
+        posts.add(0, titleAndBody);
     }
 
     private void openSettings() {

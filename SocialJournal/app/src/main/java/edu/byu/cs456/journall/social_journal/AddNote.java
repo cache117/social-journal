@@ -66,7 +66,7 @@ public class AddNote extends AppCompatActivity {
         note = ((EditText) findViewById(R.id.new_note)).getText().toString();
         if (!note.isEmpty()) {
             Intent data = new Intent(this, MainActivity.class);
-            data.putExtra("TITLE", note);
+            data.putExtra("TITLE", title);
             data.putExtra("NOTE", note);
             setResult(Activity.RESULT_OK, data);
             finish();

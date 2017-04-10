@@ -40,7 +40,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         public ViewHolder(View v) {
             super(v);
         }
+
     }
+
+    /**
+     * ViewHolder0 is for Facebook posts and inserts an iframe into a WebView
+     */
     public static class ViewHolder0 extends MyAdapter.ViewHolder {
         public WebView mWebView;
 
@@ -50,6 +55,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         }
     }
 
+    /**
+     * ViewHolder1 is for notes made in the app by the user. Contains a Title and a Body
+     */
     public static class ViewHolder1 extends MyAdapter.ViewHolder {
         public TextView mTextView;
 
@@ -59,6 +67,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         }
     }
 
+    /**
+     * ViewHolder2 is for images inserted from the device
+     */
     public static class ViewHolder2 extends MyAdapter.ViewHolder {
         public ImageView mImageView;
 
@@ -111,17 +122,24 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         //TODO not sure what to do with this yet...
         String post = mDataset.get(position);
 
-
-//        holder.mWebView.getSettings().setLoadWithOverviewMode(true);
-//        holder.mWebView.getSettings().setUseWideViewPort(true);
         switch (holder.getItemViewType()) {
+            //facebook iframe
             case 0: ViewHolder0 holder0 = (ViewHolder0) holder;
                     holder0.mWebView.setInitialScale(getScale());
                     holder0.mWebView.loadDataWithBaseURL("https://facebook.com", post, "text/html", "utf-8", null);
                     break;
+            //text note
             case 1: ViewHolder1 holder1 = (ViewHolder1) holder;
-                    holder1.mTextView.setText(post);
+                    String delimeter = "\\(@\\)";
+                    String[] titleAndBody = post.split(delimeter);
+                    if(titleAndBody.length == 2) {
+                        holder1.mTextView.setText(titleAndBody[0] + "\n\n" + titleAndBody[1]);
+                    }
+                    else{
+                        holder1.mTextView.setText(titleAndBody[0]);
+                    }
                     break;
+            //image
             case 2: ViewHolder2 holder2 = (ViewHolder2) holder;
                     Bitmap image = StringToBitMap(post.substring(16));
                     holder2.mImageView.setImageBitmap(image);
