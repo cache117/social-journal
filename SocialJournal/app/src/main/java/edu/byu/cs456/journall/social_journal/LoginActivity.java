@@ -56,6 +56,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     // User is signed in
+                    Intent mainActivity = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(mainActivity);
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 } else {
                     // User is signed out
@@ -134,8 +136,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         }
                         else
                         {
-                            Intent mainActivity = new Intent(LoginActivity.this, MainActivity.class);
-                            startActivity(mainActivity);
                         }
                         // ...
                     }
