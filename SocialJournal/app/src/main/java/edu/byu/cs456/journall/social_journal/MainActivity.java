@@ -190,6 +190,7 @@ public class MainActivity extends AppCompatActivity
                         try {
                             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
                             addNewImage(bitmap);
+                            adapter.notifyDataSetChanged();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -221,6 +222,7 @@ public class MainActivity extends AppCompatActivity
                         else if (newNote != null && !newNote.isEmpty()){
                             addNewNote(null, newNote);
                         }
+                        adapter.notifyDataSetChanged();
                     }
                 }
                 break;
