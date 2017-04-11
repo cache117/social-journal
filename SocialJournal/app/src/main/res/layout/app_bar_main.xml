@@ -18,7 +18,7 @@
 
     <include layout="@layout/content_main" />
 
-    <android.support.design.widget.FloatingActionButton xmlns:android="http://schemas.android.com/apk/res/android"
+    <!--<android.support.design.widget.FloatingActionButton xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/fab"
@@ -27,6 +27,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@drawable/ic_add_black_24dp"
-        tools:showIn="@layout/activity_add_note" />
+        tools:showIn="@layout/activity_add_note" />-->
 
 </android.support.design.widget.CoordinatorLayout>
