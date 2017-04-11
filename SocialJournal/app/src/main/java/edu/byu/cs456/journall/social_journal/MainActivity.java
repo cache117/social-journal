@@ -20,18 +20,42 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import edu.byu.cs456.journall.social_journal.post.FacebookPost;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private final String TAG = MainActivity.class.getCanonicalName();
     static final int SELECT_IMAGE = 1;
     static final int SELECT_DATE = 2;
     static final int ADD_NOTE = 3;
@@ -43,6 +67,7 @@ public class MainActivity extends AppCompatActivity
     private List<String> posts = getPosts();
     private StorageReference mStorageRef;
     private FirebaseDatabase mDatabase;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,12 +122,87 @@ public class MainActivity extends AppCompatActivity
         adapter = new MyAdapter(posts, this);
         myRecyclerView.setAdapter(adapter);
 
+        mAuth = FirebaseAuth.getInstance();
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance();
+        syncUserProfiles();
+        onBoarding();
+    }
+
+    private void syncUserProfiles() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            String uid = user.getUid();
+            DatabaseReference users = FirebaseDatabase.getInstance().getReference("/users");
+            users.child(uid).child("email").setValue(user.getEmail());
+            users.child(uid).child("name").setValue(user.getDisplayName());
+            for (UserInfo userInfo : user.getProviderData()) {
+                if (!userInfo.getProviderId().equals("firebase")) {
+                    users.child(uid).child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
+                }
+            }
+        }
+    }
+
+
+    private void onBoarding() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            final String uid = user.getUid();
+            FirebaseDatabase.getInstance().getReference("/users").child(uid).child("onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        importExistingPosts(uid);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
+    }
+
+    private void importExistingPosts(final String uid) {
+        /* make the API call */
+        new GraphRequest(
+                AccessToken.getCurrentAccessToken(),
+                "/me/feed",
+                null,
+                HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    public void onCompleted(GraphResponse response) {
+                        /* handle the result */
+                        Log.d(TAG, response.toString());
+                        try {
+                            JSONArray data = (JSONArray) response.getJSONObject().get("data");
+                            int length = data.length() > 5 ? 5 : data.length();
+                            for (int i = 0; i < length; ++i)
+                            {
+                                JSONObject row = data.getJSONObject(i);
+                                String createdTime = (String) row.get("created_time");
+
+                                String postId = (String) row.get("id");
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+                                Date date = dateFormat.parse(createdTime);
+                                FacebookPost post = new FacebookPost(uid, date, postId);
+                                FirebaseDatabase.getInstance().getReference("/posts").push().setValue(post);
+                            }
+                        FirebaseDatabase.getInstance().getReference("/users").child(uid).child("onboarding").setValue(true);
+
+                        } catch (JSONException | ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        ).executeAsync();
     }
 
     /**
      * Initializes posts displayed on home page
+     *
      * @return List of Strings. Strings represent each post.
      */
     private List<String> getPosts() {
@@ -218,8 +318,7 @@ public class MainActivity extends AppCompatActivity
                         String newNote = data.getStringExtra("NOTE");
                         if (noteTitle != null && !noteTitle.isEmpty() && newNote != null && !newNote.isEmpty()) {
                             addNewNote(noteTitle, newNote);
-                        }
-                        else if (newNote != null && !newNote.isEmpty()){
+                        } else if (newNote != null && !newNote.isEmpty()) {
                             addNewNote(null, newNote);
                         }
                         adapter.notifyDataSetChanged();
@@ -233,10 +332,9 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
         String titleAndBody;
         Log.d("NOTE", "noteTitle is " + noteTitle);
-        if(noteTitle != null) {
+        if (noteTitle != null) {
             titleAndBody = noteTitle + "(@)" + newNote;
-        }
-        else{
+        } else {
             titleAndBody = newNote;
         }
         posts.add(0, titleAndBody);
@@ -283,11 +381,20 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(getApplicationContext(), day + "/" + month + "/" + year, Toast.LENGTH_LONG).show();
     }
 
-    private String BitMapToString(Bitmap bitmap){
-        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
-        byte [] b=baos.toByteArray();
-        String temp= Base64.encodeToString(b, Base64.DEFAULT);
+    private String BitMapToString(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] b = baos.toByteArray();
+        String temp = Base64.encodeToString(b, Base64.DEFAULT);
         return temp;
+    }
+
+    private String generateFacebookPostHTML(String userId, String postId) throws UnsupportedEncodingException {
+        //String iframeFront = String.format("<iframe src=\"https://www.facebook.com/plugins/post.php?href=%s", generateFacebookPostUrl(userId, postId), );
+        return "https://www.facebook.com/" + userId + "/posts/" + postId;
+    }
+
+    private String generateFacebookPostUrl(String userId, String postId) throws UnsupportedEncodingException {
+        return URLEncoder.encode("https://www.facebook.com/" + userId + "/posts/" + postId, "UTF-8");
     }
 }

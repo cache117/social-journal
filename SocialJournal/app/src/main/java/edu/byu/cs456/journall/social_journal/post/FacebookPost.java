@@ -9,14 +9,14 @@ import java.util.Date;
  */
 
 @IgnoreExtraProperties
-class FacebookPost extends Post {
+public class FacebookPost extends Post {
     public String postId;
 
     public FacebookPost() {
 
     }
 
-    protected FacebookPost(String userId, Date date, String postId) {
+    public FacebookPost(String userId, Date date, String postId) {
         super(userId, date);
         this.postId = postId;
     }
