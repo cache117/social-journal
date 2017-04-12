@@ -21,4 +21,15 @@ public class NotePost extends Post {
         this.title = title;
         this.body = body;
     }
+
+    @Override
+    public String toString() {
+        String titleAndBody;
+        if (title != null) {
+            titleAndBody = title + "(@)" + body;
+        } else {
+            titleAndBody = body;
+        }
+        return titleAndBody;
+    }
 }

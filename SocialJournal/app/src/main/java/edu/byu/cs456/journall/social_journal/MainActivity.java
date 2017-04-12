@@ -2,9 +2,9 @@ package edu.byu.cs456.journall.social_journal;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -14,7 +14,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,9 +23,12 @@ import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,16 +36,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,6 +50,9 @@ import java.util.List;
 import java.util.Locale;
 
 import edu.byu.cs456.journall.social_journal.post.FacebookPost;
+import edu.byu.cs456.journall.social_journal.post.ImagePost;
+import edu.byu.cs456.journall.social_journal.post.NotePost;
+import edu.byu.cs456.journall.social_journal.post.Post;
 
 
 public class MainActivity extends AppCompatActivity
@@ -60,27 +62,23 @@ public class MainActivity extends AppCompatActivity
     static final int SELECT_DATE = 2;
     static final int ADD_NOTE = 3;
 
+    private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
+
     private RecyclerView myRecyclerView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
 
-    private List<String> posts = getPosts();
-    private StorageReference mStorageRef;
+    private List<Post> posts;
     private FirebaseDatabase mDatabase;
-    private FirebaseAuth mAuth;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private String mPhotoUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        // Get a support ActionBar corresponding to this toolbar
-        ActionBar ab = getSupportActionBar();
-
-        // Enable the Up button
-        ab.setDisplayHomeAsUpEnabled(true);
+        Toolbar toolbar = initializeToolbar();
 
         //Javascript that https://developers.facebook.com/docs/plugins/embedded-posts said was necessary
         //It is not necessary when clicking "embed" on a post but it might be needed
@@ -101,15 +99,51 @@ public class MainActivity extends AppCompatActivity
 //        String data = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
 //        firstPost.loadDataWithBaseURL("https://www.facebook.com/", data, "text/html", "utf-8", null);
 
+        initializeDrawer(toolbar);
+        initializeNavigationView();
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        mDatabase = FirebaseDatabase.getInstance();
+        if (mFirebaseUser != null) {
+            syncUserProfiles();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            }
+            onBoarding();
+            posts = getFacebookPosts();
+            getPostsFromDatabase();
+
+            setUpRecyclerView();
+        }
+    }
+
+    private Toolbar initializeToolbar() {
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        // Get a support ActionBar corresponding to this toolbar
+        ActionBar ab = getSupportActionBar();
+
+        // Enable the Up button
+        ab.setDisplayHomeAsUpEnabled(true);
+        return toolbar;
+    }
+
+    private void initializeDrawer(Toolbar toolbar) {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+    }
 
+    private void initializeNavigationView() {
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
 
+    private void setUpRecyclerView() {
         myRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
         myRecyclerView.setHasFixedSize(false);
@@ -117,52 +151,38 @@ public class MainActivity extends AppCompatActivity
         layoutManager = new LinearLayoutManager(this);
         myRecyclerView.setLayoutManager(layoutManager);
 
-        //posts = getPosts();
-
         adapter = new MyAdapter(posts, this);
         myRecyclerView.setAdapter(adapter);
-
-        mAuth = FirebaseAuth.getInstance();
-        mStorageRef = FirebaseStorage.getInstance().getReference();
-        mDatabase = FirebaseDatabase.getInstance();
-        syncUserProfiles();
-        onBoarding();
     }
 
     private void syncUserProfiles() {
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user != null) {
-            String uid = user.getUid();
-            DatabaseReference users = FirebaseDatabase.getInstance().getReference("/users");
-            users.child(uid).child("email").setValue(user.getEmail());
-            users.child(uid).child("name").setValue(user.getDisplayName());
-            for (UserInfo userInfo : user.getProviderData()) {
-                if (!userInfo.getProviderId().equals("firebase")) {
-                    users.child(uid).child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
-                }
+        String uid = mFirebaseUser.getUid();
+        DatabaseReference users = mDatabase.getReference("/users");
+        users.child(uid).child("email").setValue(mFirebaseUser.getEmail());
+        users.child(uid).child("name").setValue(mFirebaseUser.getDisplayName());
+        for (UserInfo userInfo : mFirebaseUser.getProviderData()) {
+            if (!userInfo.getProviderId().equals("firebase")) {
+                users.child(uid).child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
             }
         }
     }
 
-
     private void onBoarding() {
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user != null) {
-            final String uid = user.getUid();
-            FirebaseDatabase.getInstance().getReference("/users").child(uid).child("onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (!dataSnapshot.exists()) {
-                        importExistingPosts(uid);
-                    }
+        final String uid = mFirebaseUser.getUid();
+        mDatabase.getReference("/users").child(uid).child("onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.exists()) {
+                    importExistingPosts(uid);
                 }
+            }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-                }
-            });
-        }
+            }
+        });
+
     }
 
     private void importExistingPosts(final String uid) {
@@ -178,21 +198,24 @@ public class MainActivity extends AppCompatActivity
                         Log.d(TAG, response.toString());
                         try {
                             JSONArray data = (JSONArray) response.getJSONObject().get("data");
-                            int length = data.length() > 5 ? 5 : data.length();
-                            for (int i = 0; i < length; ++i)
-                            {
-                                JSONObject row = data.getJSONObject(i);
-                                String createdTime = (String) row.get("created_time");
+                            if (data.length() != 0) {
+                                int length = data.length() > 2 ? 2 : data.length();
+                                for (int i = 0; i < length; ++i) {
+                                    JSONObject row = data.getJSONObject(i);
+                                    String createdTime = (String) row.get("created_time");
 
-                                String postId = (String) row.get("id");
-                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
-                                Date date = dateFormat.parse(createdTime);
-                                FacebookPost post = new FacebookPost(uid, date, postId);
-                                FirebaseDatabase.getInstance().getReference("/posts").push().setValue(post);
+                                    String postId = (String) row.get("id");
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+                                    Date date = dateFormat.parse(createdTime);
+                                    FacebookPost post = new FacebookPost(uid, date, postId);
+                                    mDatabase.getReference("/posts/" + uid + "/facebook_posts").push().setValue(post);
+                                }
+                                mDatabase.getReference("/users").child(uid).child("onboarding").setValue(true);
+                            } else {
+                                throw new Exception("This app needs access to posts, and isn't getting them");
                             }
-                        FirebaseDatabase.getInstance().getReference("/users").child(uid).child("onboarding").setValue(true);
 
-                        } catch (JSONException | ParseException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -205,14 +228,29 @@ public class MainActivity extends AppCompatActivity
      *
      * @return List of Strings. Strings represent each post.
      */
-    private List<String> getPosts() {
-        List<String> listOfPosts = new ArrayList<String>();
+    private List<Post> getFacebookPosts() {
+        List<Post> listOfPosts = new ArrayList<>();
+        FacebookPost post1 = new FacebookPost();
+        post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts.add(post1);
+        FacebookPost post2 = new FacebookPost();
+        post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts.add(post2);
+        FacebookPost post3 = new FacebookPost();
+        post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts.add(post3);
+        FacebookPost post4 = new FacebookPost();
+        post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts.add(post4);
+        FacebookPost post5 = new FacebookPost();
+        post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        listOfPosts.add(post5);
 
-        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
+//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
 
         return listOfPosts;
     }
@@ -287,13 +325,7 @@ public class MainActivity extends AppCompatActivity
             case SELECT_IMAGE:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        try {
-                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
-                            addNewImage(bitmap);
-                            adapter.notifyDataSetChanged();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        addNewImage(data);
                     }
                 } else if (resultCode == Activity.RESULT_CANCELED) {
                     Toast.makeText(getApplicationContext(), "Cancelled", Toast.LENGTH_SHORT).show();
@@ -328,16 +360,64 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    private void putImageInStorage(StorageReference storageReference, Uri uri, final String key) {
+        storageReference.putFile(uri).addOnCompleteListener(MainActivity.this,
+                new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            String uid = mFirebaseUser.getUid();
+                            @SuppressWarnings("VisibleForTests")
+                            ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, task.getResult().getMetadata().getDownloadUrl().toString());
+
+                            mDatabase.getReference().child("post").child(uid).child("images").child(key).setValue(image);
+                        } else {
+                            Log.w(TAG, "Image upload task was not successful.", task.getException());
+                        }
+                    }
+                });
+    }
+
     private void addNewNote(String noteTitle, String newNote) {
-        Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
-        String titleAndBody;
-        Log.d("NOTE", "noteTitle is " + noteTitle);
-        if (noteTitle != null) {
-            titleAndBody = noteTitle + "(@)" + newNote;
-        } else {
-            titleAndBody = newNote;
+        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+        if (user != null) {
+            final String uid = user.getUid();
+            NotePost post = new NotePost(uid, new Date(), noteTitle, newNote);
+            mDatabase.getReference("/posts/" + uid + "/notes").push().setValue(post);
+            Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
+//            posts.add(0, post.toString());
+
+            Log.d(TAG, "Note is " + post.toString());
         }
-        posts.add(0, titleAndBody);
+
+    }
+
+    private void addNewImage(Intent data) {
+        final Uri uri = data.getData();
+        Log.d(TAG, "Uri: " + uri.toString());
+        String uid = mFirebaseUser.getUid();
+        ImagePost tempPost = new ImagePost(uid, new Date(), mPhotoUrl);
+        FirebaseDatabase
+                .getInstance()
+                .getReference("posts")
+                .child(uid)
+                .child("images")
+                .push()
+                .setValue(tempPost, new DatabaseReference.CompletionListener() {
+                    @Override
+                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                        if (databaseError == null) {
+                            String key = databaseReference.getKey();
+                            StorageReference storageReference = FirebaseStorage
+                                    .getInstance()
+                                    .getReference(mFirebaseUser.getUid())
+                                    .child(key)
+                                    .child(uri.getLastPathSegment());
+                            putImageInStorage(storageReference, uri, key);
+                        }
+                    }
+                });
     }
 
     private void openSettings() {
@@ -351,12 +431,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addPicture() {
-//        Intent pictures = new Intent(this, AddPicture.class);
-//        startActivity(pictures);
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);//
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_IMAGE);
+        startActivityForResult(intent, SELECT_IMAGE);
     }
 
     private void addNote() {
@@ -369,24 +447,8 @@ public class MainActivity extends AppCompatActivity
         startActivity(home);
     }
 
-    private void addNewImage(Bitmap image) {
-        String imageAsString = BitMapToString(image);
-        String preface = "THIS IS A BITMAP"; //insert this before the bits in a bitmap
-        posts.add(0, preface + imageAsString);
-        Log.d("Debug", "imageAsString == " + imageAsString);
-        Toast.makeText(getApplicationContext(), "Adding Image", Toast.LENGTH_LONG).show();
-    }
-
     private void navigateToDay(int year, int month, int day) {
         Toast.makeText(getApplicationContext(), day + "/" + month + "/" + year, Toast.LENGTH_LONG).show();
-    }
-
-    private String BitMapToString(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        byte[] b = baos.toByteArray();
-        String temp = Base64.encodeToString(b, Base64.DEFAULT);
-        return temp;
     }
 
     private String generateFacebookPostHTML(String userId, String postId) throws UnsupportedEncodingException {
@@ -396,5 +458,117 @@ public class MainActivity extends AppCompatActivity
 
     private String generateFacebookPostUrl(String userId, String postId) throws UnsupportedEncodingException {
         return URLEncoder.encode("https://www.facebook.com/" + userId + "/posts/" + postId, "UTF-8");
+    }
+
+    public void getPostsFromDatabase() {
+        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+        if (user != null) {
+            final String uid = user.getUid();
+            mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
+            mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
+            mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
+        }
+    }
+
+    private class FacebookChildEventListener implements ChildEventListener {
+
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(FacebookPost.class);
+            MainActivity.this.posts.add(0, post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(FacebookPost.class);
+            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            Post post = dataSnapshot.getValue(FacebookPost.class);
+            MainActivity.this.posts.remove(post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    }
+
+    private class ImageChildEventListener implements ChildEventListener {
+
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(ImagePost.class);
+            MainActivity.this.posts.add(0, post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(ImagePost.class);
+            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            Post post = dataSnapshot.getValue(ImagePost.class);
+            MainActivity.this.posts.remove(post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    }
+
+    private class NoteChildEventListener implements ChildEventListener {
+
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(NotePost.class);
+            MainActivity.this.posts.add(0, post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(NotePost.class);
+            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            Post post = dataSnapshot.getValue(NotePost.class);
+            MainActivity.this.posts.remove(post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
     }
 }
