@@ -303,10 +303,10 @@ public class MainActivity extends AppCompatActivity
                 addPicture();
                 //send to picture page
                 break;
-            case R.id.nav_show_calendar:
-                showCalendar();
-                //send to calendar page
-                break;
+//            case R.id.nav_show_calendar:
+//                showCalendar();
+//                //send to calendar page
+//                break;
             case R.id.nav_settings:
                 //send to settings page
                 openSettings();
