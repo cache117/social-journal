@@ -27,17 +27,12 @@ import com.google.firebase.auth.FirebaseUser;
 /**
  * A login screen that offers login via Facebook
  */
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
+public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "Login";
     private CallbackManager mCallbackManager;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-
-    @Override
-    public void onClick(View v) {
-
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
