@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -40,16 +39,12 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -58,7 +53,6 @@ import edu.byu.cs456.journall.social_journal.post.FacebookPost;
 import edu.byu.cs456.journall.social_journal.post.ImagePost;
 import edu.byu.cs456.journall.social_journal.post.NotePost;
 import edu.byu.cs456.journall.social_journal.post.Post;
-import edu.byu.cs456.journall.social_journal.post.PostComparatorByDate;
 
 
 public class MainActivity extends AppCompatActivity
@@ -87,7 +81,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = initializeToolbar();
 
         //Javascript that https://developers.facebook.com/docs/plugins/embedded-posts said was necessary
-        //It is not necessary when clicking "embed" on a web_view but it might be needed
+        //It is not necessary when clicking "embed" on a post but it might be needed
         //if we change the way we embed pictures to use the Graph API
 //        WebView init = (WebView) findViewById(R.id.init_js);
 //        String initData = "<div id=\"fb-root\"></div>\n" +
@@ -100,7 +94,7 @@ public class MainActivity extends AppCompatActivity
 //                "}(document, 'script', 'facebook-jssdk'));</script>";
 //        init.loadData(initData, "text/html", null);
 
-        //Funny web_view about stress
+        //Funny post about stress
 //        WebView firstPost = (WebView) findViewById(R.id.post1);
 //        String data = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
 //        firstPost.loadDataWithBaseURL("https://www.facebook.com/", data, "text/html", "utf-8", null);
@@ -188,6 +182,7 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+
     }
 
     private void importExistingPosts(final String uid) {
@@ -197,90 +192,58 @@ public class MainActivity extends AppCompatActivity
                 "/me/feed",
                 null,
                 HttpMethod.GET,
-                new ImportExistingPostsCallback(uid)
-        ).executeAsync();
-    }
+                new GraphRequest.Callback() {
+                    public void onCompleted(GraphResponse response) {
+                        /* handle the result */
+                        Log.d(TAG, response.toString());
+                        try {
+                            JSONArray data = (JSONArray) response.getJSONObject().get("data");
+                            if (data.length() != 0) {
+                                int length = data.length() > 2 ? 2 : data.length();
+                                for (int i = 0; i < length; ++i) {
+                                    JSONObject row = data.getJSONObject(i);
+                                    String createdTime = (String) row.get("created_time");
 
-    private class ImportExistingPostsCallback implements GraphRequest.Callback {
-        private String uid;
+                                    String postId = (String) row.get("id");
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+                                    Date date = dateFormat.parse(createdTime);
+                                    FacebookPost post = new FacebookPost(uid, date, postId);
+                                    mDatabase.getReference("/posts/" + uid + "/facebook_posts").push().setValue(post);
+                                }
+                                mDatabase.getReference("/users").child(uid).child("onboarding").setValue(true);
+                            } else {
+                                throw new Exception("This app needs access to posts, and isn't getting them");
+                            }
 
-        ImportExistingPostsCallback(String uid) {
-            this.uid = uid;
-        }
-
-        @Override
-        public void onCompleted(GraphResponse response) {
-            Log.d(TAG, response.toString());
-            try {
-                JSONArray data = (JSONArray) response.getJSONObject().get("data");
-                if (data.length() != 0) {
-                    int length = data.length() > 2 ? 2 : data.length();
-                    for (int i = 0; i < length; ++i) {
-                        JSONObject row = data.getJSONObject(i);
-                        FacebookPost post = getFacebookPostFromRow(row);
-                        mDatabase.getReference("/posts").child(uid).child("facebook_posts").push().setValue(post);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
-                    mDatabase.getReference("/users").child(uid).child("onboarding").setValue(true);
-                } else {
-                    throw new Exception("This app needs access to posts, and isn't getting them");
                 }
-
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(), "Something went wrong with importing your existing posts", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @NonNull
-        private FacebookPost getFacebookPostFromRow(JSONObject row) throws JSONException, ParseException {
-            String postId = row.getString("id");
-            Date date = getFacebookDate(row.getString("created_time"));
-            String message = null;
-            try {
-                message = row.getString("message");
-            } catch (JSONException ignored) {
-
-            }
-            String story = null;
-            try {
-                story = row.getString("story");
-            } catch (JSONException ignored) {
-
-            }
-            return new FacebookPost(uid, date, postId, message, story);
-        }
-    }
-
-    private Date getFacebookDate(String createdTime) throws ParseException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
-        return dateFormat.parse(createdTime);
+        ).executeAsync();
     }
 
     /**
      * Initializes posts displayed on home page
      *
-     * @return List of Strings. Strings represent each web_view.
+     * @return List of Strings. Strings represent each post.
      */
     private List<Post> getFacebookPosts() {
         List<Post> listOfPosts = new ArrayList<>();
         FacebookPost post1 = new FacebookPost();
-        post1.url = "<iframe src=\"https://www.facebook.com/plugins/web_view.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        post1.date = getDate(2017, 3, 25);
+        post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post1);
         FacebookPost post2 = new FacebookPost();
-        post2.url = "<iframe src=\"https://www.facebook.com/plugins/web_view.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        post2.date = getDate(2017, 3, 24);
+        post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post2);
         FacebookPost post3 = new FacebookPost();
-        post3.url = "<iframe src=\"https://www.facebook.com/plugins/web_view.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        post3.date = getDate(2017, 2, 15);
+        post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post3);
         FacebookPost post4 = new FacebookPost();
-        post4.url = "<iframe src=\"https://www.facebook.com/plugins/web_view.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        post4.date = getDate(2017, 1, 12);
+        post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post4);
         FacebookPost post5 = new FacebookPost();
-        post5.url = "<iframe src=\"https://www.facebook.com/plugins/web_view.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-        post5.date = getDate(2013, 8, 15);
+        post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post5);
 
 //        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
@@ -288,14 +251,8 @@ public class MainActivity extends AppCompatActivity
 //        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
 //        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
 //        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-        Collections.sort(listOfPosts, new PostComparatorByDate());
-        return listOfPosts;
-    }
 
-    private Date getDate(int year, int month, int day) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(year, month, day);
-        return calendar.getTime();
+        return listOfPosts;
     }
 
     @Override
@@ -330,7 +287,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+    public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         switch (id) {
@@ -396,6 +353,7 @@ public class MainActivity extends AppCompatActivity
                         } else if (newNote != null && !newNote.isEmpty()) {
                             addNewNote(null, newNote);
                         }
+                        adapter.notifyDataSetChanged();
                     }
                 }
                 break;
@@ -413,7 +371,7 @@ public class MainActivity extends AppCompatActivity
                             @SuppressWarnings("VisibleForTests")
                             ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, task.getResult().getMetadata().getDownloadUrl().toString());
 
-                            mDatabase.getReference().child("web_view").child(uid).child("images").child(key).setValue(image);
+                            mDatabase.getReference().child("post").child(uid).child("images").child(key).setValue(image);
                         } else {
                             Log.w(TAG, "Image upload task was not successful.", task.getException());
                         }
@@ -428,7 +386,7 @@ public class MainActivity extends AppCompatActivity
             NotePost post = new NotePost(uid, new Date(), noteTitle, newNote);
             mDatabase.getReference("/posts/" + uid + "/notes").push().setValue(post);
             Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
-//            posts.add(0, web_view.toString());
+//            posts.add(0, post.toString());
 
             Log.d(TAG, "Note is " + post.toString());
         }
@@ -503,39 +461,36 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void getPostsFromDatabase() {
-        final String uid = mFirebaseUser.getUid();
-        mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
-        mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
-        mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
+        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+        if (user != null) {
+            final String uid = user.getUid();
+            mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
+            mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
+            mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
+        }
     }
 
-    private abstract class BaseChildEventListener implements ChildEventListener {
-
-        protected abstract Post getPostFromDataSnapshot(DataSnapshot dataSnapshot);
+    private class FacebookChildEventListener implements ChildEventListener {
 
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            Post post = getPostFromDataSnapshot(dataSnapshot);
-            MainActivity.this.posts.add(post);
-            Collections.sort(MainActivity.this.posts, new PostComparatorByDate());
-            int index = MainActivity.this.posts.indexOf(post);
-            MainActivity.this.adapter.notifyItemInserted(index);
+            Post post = dataSnapshot.getValue(FacebookPost.class);
+            MainActivity.this.posts.add(0, post);
+            MainActivity.this.adapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            Post post = getPostFromDataSnapshot(dataSnapshot);
-            int index = MainActivity.this.posts.indexOf(post);
-            MainActivity.this.posts.set(index, post);
-            MainActivity.this.adapter.notifyItemChanged(index);
+            Post post = dataSnapshot.getValue(FacebookPost.class);
+            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            MainActivity.this.adapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            Post post = getPostFromDataSnapshot(dataSnapshot);
-            int index = MainActivity.this.posts.indexOf(post);
+            Post post = dataSnapshot.getValue(FacebookPost.class);
             MainActivity.this.posts.remove(post);
-            MainActivity.this.adapter.notifyItemRemoved(index);
+            MainActivity.this.adapter.notifyDataSetChanged();
         }
 
         @Override
@@ -549,25 +504,71 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private class FacebookChildEventListener extends BaseChildEventListener {
+    private class ImageChildEventListener implements ChildEventListener {
+
         @Override
-        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
-            return dataSnapshot.getValue(FacebookPost.class);
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(ImagePost.class);
+            MainActivity.this.posts.add(0, post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(ImagePost.class);
+            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            Post post = dataSnapshot.getValue(ImagePost.class);
+            MainActivity.this.posts.remove(post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
         }
     }
 
-    private class ImageChildEventListener extends BaseChildEventListener {
+    private class NoteChildEventListener implements ChildEventListener {
+
         @Override
-        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
-            return dataSnapshot.getValue(ImagePost.class);
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(NotePost.class);
+            MainActivity.this.posts.add(0, post);
+            MainActivity.this.adapter.notifyDataSetChanged();
         }
-    }
-
-    private class NoteChildEventListener extends BaseChildEventListener {
 
         @Override
-        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
-            return dataSnapshot.getValue(NotePost.class);
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            Post post = dataSnapshot.getValue(NotePost.class);
+            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            Post post = dataSnapshot.getValue(NotePost.class);
+            MainActivity.this.posts.remove(post);
+            MainActivity.this.adapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
         }
     }
 }
