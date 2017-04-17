@@ -1,5 +1,8 @@
 package edu.byu.cs456.journall.social_journal.post;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.Date;
@@ -14,6 +17,9 @@ public class FacebookPost extends Post {
     public String postId;
     public String url;
 
+    public String message;
+    public String story;
+
     public FacebookPost() {
 
     }
@@ -25,6 +31,13 @@ public class FacebookPost extends Post {
     public FacebookPost(String userId, Date date, String postId) {
         super(userId, date);
         this.postId = postId;
+    }
+
+    public FacebookPost(@NonNull String userId, @NonNull Date date, @NonNull String postId, @Nullable String message, @Nullable String story) {
+        super(userId, date);
+        this.postId = postId;
+        this.message = message;
+        this.story = story;
     }
 
     @Override

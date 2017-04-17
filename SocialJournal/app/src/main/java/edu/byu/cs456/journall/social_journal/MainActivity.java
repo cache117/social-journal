@@ -39,10 +39,12 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -195,35 +197,63 @@ public class MainActivity extends AppCompatActivity
                 "/me/feed",
                 null,
                 HttpMethod.GET,
-                new GraphRequest.Callback() {
-                    public void onCompleted(GraphResponse response) {
-                        /* handle the result */
-                        Log.d(TAG, response.toString());
-                        try {
-                            JSONArray data = (JSONArray) response.getJSONObject().get("data");
-                            if (data.length() != 0) {
-                                int length = data.length() > 2 ? 2 : data.length();
-                                for (int i = 0; i < length; ++i) {
-                                    JSONObject row = data.getJSONObject(i);
-                                    String createdTime = (String) row.get("created_time");
-
-                                    String postId = (String) row.get("id");
-                                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
-                                    Date date = dateFormat.parse(createdTime);
-                                    FacebookPost post = new FacebookPost(uid, date, postId);
-                                    mDatabase.getReference("/posts/" + uid + "/facebook_posts").push().setValue(post);
-                                }
-                                mDatabase.getReference("/users").child(uid).child("onboarding").setValue(true);
-                            } else {
-                                throw new Exception("This app needs access to posts, and isn't getting them");
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                new ImportExistingPostsCallback(uid)
         ).executeAsync();
+    }
+
+    private class ImportExistingPostsCallback implements GraphRequest.Callback {
+        private String uid;
+
+        ImportExistingPostsCallback(String uid) {
+            this.uid = uid;
+        }
+
+        @Override
+        public void onCompleted(GraphResponse response) {
+            Log.d(TAG, response.toString());
+            try {
+                JSONArray data = (JSONArray) response.getJSONObject().get("data");
+                if (data.length() != 0) {
+                    int length = data.length() > 2 ? 2 : data.length();
+                    for (int i = 0; i < length; ++i) {
+                        JSONObject row = data.getJSONObject(i);
+                        FacebookPost post = getFacebookPostFromRow(row);
+                        mDatabase.getReference("/posts").child(uid).child("facebook_posts").push().setValue(post);
+                    }
+                    mDatabase.getReference("/users").child(uid).child("onboarding").setValue(true);
+                } else {
+                    throw new Exception("This app needs access to posts, and isn't getting them");
+                }
+
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), "Something went wrong with importing your existing posts", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @NonNull
+        private FacebookPost getFacebookPostFromRow(JSONObject row) throws JSONException, ParseException {
+            String postId = row.getString("id");
+            Date date = getFacebookDate(row.getString("created_time"));
+            String message = null;
+            try {
+                message = row.getString("message");
+            } catch (JSONException ignored) {
+
+            }
+            String story = null;
+            try {
+                story = row.getString("story");
+            } catch (JSONException ignored) {
+
+            }
+            return new FacebookPost(uid, date, postId, message, story);
+//            return new FacebookPost(uid, date, postId);
+        }
+    }
+
+    private Date getFacebookDate(String createdTime) throws ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+        return dateFormat.parse(createdTime);
     }
 
     /**
@@ -449,6 +479,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void navigateToDay(int year, int month, int day) {
+
         Toast.makeText(getApplicationContext(), day + "/" + month + "/" + year, Toast.LENGTH_LONG).show();
     }
 
