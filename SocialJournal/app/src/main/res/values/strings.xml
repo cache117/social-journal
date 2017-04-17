@@ -111,4 +111,5 @@
     <string name="note_hint">Add your note here</string>
     <string name="authors">Michael Call &amp; Cache Staheli</string>
     <string name="image_view_descr">Added image</string>
+    <string name="facebook_post_image">Facebook Post Image</string>
 </resources>

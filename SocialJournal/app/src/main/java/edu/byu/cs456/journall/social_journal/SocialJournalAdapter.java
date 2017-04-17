@@ -74,15 +74,15 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
      * Contains a Title, a Date, and a Body
      */
     public static class NoteViewHolder extends SocialJournalAdapter.ViewHolder {
-        public TextView mTextTitle;
-        public TextView mTextDate;
-        public TextView mTextBody;
+        public TextView mTitle;
+        public TextView mDate;
+        public TextView mBody;
 
         public NoteViewHolder(View v) {
             super(v);
-            mTextTitle = (TextView) v.findViewById(R.id.text_view_title);
-            mTextDate = (TextView) v.findViewById(R.id.text_view_date);
-            mTextBody = (TextView) v.findViewById(R.id.text_view_body);
+            mTitle = (TextView) v.findViewById(R.id.text_view_title);
+            mDate = (TextView) v.findViewById(R.id.text_view_date);
+            mBody = (TextView) v.findViewById(R.id.text_view_body);
         }
     }
 
@@ -99,11 +99,19 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     }
 
     public static class FacebookViewHolder extends SocialJournalAdapter.ViewHolder {
-        public TextView mPostTitle;
+        public ImageView mProfilePicture;
+        public TextView mName;
+        public TextView mStatus;
+        public TextView mDate;
+        public TextView mMessage;
 
         public FacebookViewHolder(View v) {
             super(v);
-            mPostTitle = (TextView) v.findViewById(R.id.facebook_post_title);
+            mProfilePicture = (ImageView) v.findViewById(R.id.facebook_post_profile_picture);
+            mName = (TextView) v.findViewById(R.id.facebook_post_name);
+            mStatus = (TextView) v.findViewById(R.id.facebook_post_status);
+            mDate = (TextView) v.findViewById(R.id.facebook_post_date);
+            mMessage = (TextView) v.findViewById(R.id.facebook_post_message);
         }
     }
 
@@ -169,7 +177,9 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     private void handleFacebookPost(ViewHolder holder, Post post) {
         FacebookViewHolder facebookViewHolder = (FacebookViewHolder) holder;
         FacebookPost facebookPost = (FacebookPost) post;
-        facebookViewHolder.mPostTitle.setText(facebookPost.message);
+        facebookViewHolder.mStatus.setText(facebookPost.story);
+        facebookViewHolder.mDate.setText(facebookPost.date.toString());
+        facebookViewHolder.mMessage.setText(facebookPost.message);
     }
 
     private void handleWebPost(ViewHolder holder, Post post) {
@@ -186,10 +196,10 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         String body = notePost.body;
         String date = notePost.date.toString();
         if (title != null) {
-            noteViewHolder.mTextTitle.setText(title);
+            noteViewHolder.mTitle.setText(title);
         }
-        noteViewHolder.mTextDate.setText(date);
-        noteViewHolder.mTextBody.setText(body);
+        noteViewHolder.mDate.setText(date);
+        noteViewHolder.mBody.setText(body);
     }
 
     private void handleImagePost(ViewHolder holder, Post post) {

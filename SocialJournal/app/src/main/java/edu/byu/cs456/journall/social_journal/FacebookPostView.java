@@ -2,7 +2,6 @@ package edu.byu.cs456.journall.social_journal;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.hardware.camera2.params.Face;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
@@ -75,7 +74,7 @@ public class FacebookPostView extends LinearLayout {
     protected void onFinishInflate(){
         super.onFinishInflate();
 
-        titleView = (TextView) this.findViewById(R.id.facebook_post_title);
+        titleView = (TextView) this.findViewById(R.id.facebook_post_message);
         titleView.setText(title);
         imageView = (ImageView) this.findViewById(R.id.facebook_post_image);
         imageView.setImageBitmap(image);

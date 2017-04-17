@@ -1,15 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/facebook_post_title"
-            android:textSize="32sp"/>
+    <android.support.percent.PercentRelativeLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/facebook_post_image"/>
+            android:id="@+id/facebook_post_profile_picture"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_heightPercent="10%"
+            app:layout_widthPercent="10%" />
+
+        <LinearLayout
+            android:id="@+id/facebook_status_information"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:orientation="horizontal"
+            app:layout_heightPercent="10%"
+            app:layout_widthPercent="90%">
+
+            <TextView
+                android:id="@+id/facebook_post_name"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="16sp"
+                app:layout_widthPercent="50%" />
+
+            <TextView
+                android:id="@+id/facebook_post_status"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:layout_widthPercent="50%" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/facebook_post_date"
+            android:layout_below="@+id/facebook_status_information"
+            android:layout_toEndOf="@+id/facebook_post_profile_picture"
+            app:layout_heightPercent="10%"
+            app:layout_widthPercent="90%"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/facebook_post_message"
+            android:layout_below="@+id/facebook_post_profile_picture"
+            app:layout_heightPercent="30%"
+            android:textSize="25sp"/>
+
+        <ImageView
+            android:id="@+id/facebook_post_image"
+            android:layout_below="@+id/facebook_post_message"
+            app:layout_heightPercent="40%"
+            android:contentDescription="@string/facebook_post_image" />
+    </android.support.percent.PercentRelativeLayout>
 </merge>
 
