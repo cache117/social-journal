@@ -26,6 +26,7 @@ import edu.byu.cs456.journall.social_journal.post.FacebookPost;
 import edu.byu.cs456.journall.social_journal.post.ImagePost;
 import edu.byu.cs456.journall.social_journal.post.NotePost;
 import edu.byu.cs456.journall.social_journal.post.Post;
+import edu.byu.cs456.journall.social_journal.post.WebPost;
 
 import com.bumptech.glide.Glide;
 
@@ -34,9 +35,10 @@ import com.bumptech.glide.Glide;
  */
 
 public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdapter.ViewHolder> {
-    private final static int FACEBOOK_POST = 0;
+    private final static int WEB_POST = 0;
     private final static int TEXT_POST = 1;
     private final static int IMAGE_POST = 2;
+    private final static int FACEBOOK_POST = 3;
 
     private List<Post> mDataset;
     private Context mContext;
@@ -56,12 +58,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     }
 
     /**
-     * FacebookViewHolder is for Facebook posts and inserts an iframe into a WebView
+     * WebViewHolder is for Facebook posts and inserts an iframe into a WebView
      */
-    public static class FacebookViewHolder extends SocialJournalAdapter.ViewHolder {
+    public static class WebViewHolder extends SocialJournalAdapter.ViewHolder {
         public WebView mWebView;
 
-        public FacebookViewHolder(View v) {
+        public WebViewHolder(View v) {
             super(v);
             mWebView = (WebView) v.findViewById(R.id.web_view);
         }
@@ -96,6 +98,15 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         }
     }
 
+    public static class FacebookViewHolder extends SocialJournalAdapter.ViewHolder {
+        public TextView mPostTitle;
+
+        public FacebookViewHolder(View v) {
+            super(v);
+            mPostTitle = (TextView) v.findViewById(R.id.facebook_post_title);
+        }
+    }
+
     // Provide a suitable constructor (depends on the kind of dataset)
     public SocialJournalAdapter(List<Post> myDataset, Context context) {
 
@@ -107,10 +118,10 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     @Override
     public SocialJournalAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
-            case FACEBOOK_POST:
-                View facebookView = LayoutInflater.from(parent.getContext())
+            case WEB_POST:
+                View webView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.web_view, parent, false);
-                return new FacebookViewHolder(facebookView);
+                return new WebViewHolder(webView);
             case TEXT_POST:
                 View noteView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.text_view, parent, false);
@@ -119,6 +130,10 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
                 View imageView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.image_view, parent, false);
                 return new ImageViewHolder(imageView);
+            case FACEBOOK_POST:
+                View facebookView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.facebook_post, parent, false);
+                return new FacebookViewHolder(facebookView);
             default:
                 return null;
         }
@@ -134,8 +149,8 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
 
         switch (holder.getItemViewType()) {
             //facebook iframe
-            case FACEBOOK_POST:
-                handleFacebookPost(holder, post);
+            case WEB_POST:
+                handleWebPost(holder, post);
                 break;
             //text note
             case TEXT_POST:
@@ -145,14 +160,23 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
             case IMAGE_POST:
                 handleImagePost(holder, post);
                 break;
+            //Facebook post
+            case FACEBOOK_POST:
+                handleFacebookPost(holder, post);
         }
     }
 
     private void handleFacebookPost(ViewHolder holder, Post post) {
         FacebookViewHolder facebookViewHolder = (FacebookViewHolder) holder;
         FacebookPost facebookPost = (FacebookPost) post;
-        facebookViewHolder.mWebView.setInitialScale(getScale());
-        facebookViewHolder.mWebView.loadDataWithBaseURL("https://facebook.com", facebookPost.toString(), "text/html", "utf-8", null);
+        facebookViewHolder.mPostTitle.setText(facebookPost.message);
+    }
+
+    private void handleWebPost(ViewHolder holder, Post post) {
+        WebViewHolder webViewHolder = (WebViewHolder) holder;
+        WebPost webPost = (WebPost) post;
+        webViewHolder.mWebView.setInitialScale(getScale());
+        webViewHolder.mWebView.loadDataWithBaseURL("https://facebook.com", webPost.toString(), "text/html", "utf-8", null);
     }
 
     private void handleNotePost(ViewHolder holder, Post post) {
@@ -198,7 +222,9 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     @Override
     public int getItemViewType(int position) {
         Post item = mDataset.get(position);
-        if (item instanceof FacebookPost) {
+        if (item instanceof WebPost) {
+            return WEB_POST;
+        } else if (item instanceof FacebookPost) {
             return FACEBOOK_POST;
         } else if (item instanceof ImagePost) {
             return IMAGE_POST;

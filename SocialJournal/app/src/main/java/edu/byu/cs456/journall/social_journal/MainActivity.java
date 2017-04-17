@@ -58,6 +58,7 @@ import edu.byu.cs456.journall.social_journal.post.ImagePost;
 import edu.byu.cs456.journall.social_journal.post.NotePost;
 import edu.byu.cs456.journall.social_journal.post.Post;
 import edu.byu.cs456.journall.social_journal.post.PostComparatorByDate;
+import edu.byu.cs456.journall.social_journal.post.WebPost;
 
 
 public class MainActivity extends AppCompatActivity
@@ -263,23 +264,23 @@ public class MainActivity extends AppCompatActivity
      */
     private List<Post> getFacebookPosts() {
         List<Post> listOfPosts = new ArrayList<>();
-        FacebookPost post1 = new FacebookPost();
+        WebPost post1 = new WebPost();
         post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=480\" width=\"480\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         post1.date = getDate(2017, 3, 25);
         listOfPosts.add(post1);
-        FacebookPost post2 = new FacebookPost();
+        WebPost post2 = new WebPost();
         post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=480\" width=\"480\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         post2.date = getDate(2017, 3, 24);
         listOfPosts.add(post2);
-        FacebookPost post3 = new FacebookPost();
+        WebPost post3 = new WebPost();
         post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=480\" width=\"480\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         post3.date = getDate(2017, 2, 15);
         listOfPosts.add(post3);
-        FacebookPost post4 = new FacebookPost();
+        WebPost post4 = new WebPost();
         post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=480\" width=\"480\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         post4.date = getDate(2017, 1, 12);
         listOfPosts.add(post4);
-        FacebookPost post5 = new FacebookPost();
+        WebPost post5 = new WebPost();
         post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=480\" width=\"480\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         post5.date = getDate(2013, 8, 15);
         listOfPosts.add(post5);
