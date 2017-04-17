@@ -107,15 +107,15 @@ public class MainActivity extends AppCompatActivity
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        mDatabase = FirebaseDatabase.getInstance();
         if (mFirebaseUser != null) {
+            mDatabase = FirebaseDatabase.getInstance();
             syncUserProfiles();
             if (mFirebaseUser.getPhotoUrl() != null) {
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
-            onBoarding();
             posts = getFacebookPosts();
-            getPostsFromDatabase();
+            attachPostListeners();
+            onBoarding();
 
             setUpRecyclerView();
         }
@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity
         layoutManager = new LinearLayoutManager(this);
         myRecyclerView.setLayoutManager(layoutManager);
 
-        adapter = new MyAdapter(posts, this);
+        adapter = new SocialJournalAdapter(posts, this);
         myRecyclerView.setAdapter(adapter);
     }
 
@@ -235,21 +235,32 @@ public class MainActivity extends AppCompatActivity
         List<Post> listOfPosts = new ArrayList<>();
         FacebookPost post1 = new FacebookPost();
         post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=480\" width=\"480\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post1.date = getDate(2017, 3, 25);
         listOfPosts.add(post1);
         FacebookPost post2 = new FacebookPost();
         post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=480\" width=\"480\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post2.date = getDate(2017, 3, 24);
         listOfPosts.add(post2);
         FacebookPost post3 = new FacebookPost();
         post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=480\" width=\"480\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post3.date = getDate(2017, 2, 15);
         listOfPosts.add(post3);
         FacebookPost post4 = new FacebookPost();
         post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=480\" width=\"480\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post4.date = getDate(2017, 1, 12);
         listOfPosts.add(post4);
         FacebookPost post5 = new FacebookPost();
         post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=480\" width=\"480\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post5.date = getDate(2013, 8, 15);
         listOfPosts.add(post5);
 
         return listOfPosts;
+    }
+
+    private Date getDate(int year, int month, int day) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month, day);
+        return calendar.getTime();
     }
 
     @Override
@@ -350,7 +361,6 @@ public class MainActivity extends AppCompatActivity
                         } else if (newNote != null && !newNote.isEmpty()) {
                             addNewNote(null, newNote);
                         }
-                        adapter.notifyDataSetChanged();
                     }
                 }
                 break;
@@ -377,17 +387,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addNewNote(String noteTitle, String newNote) {
-        FirebaseUser user = mFirebaseAuth.getCurrentUser();
-        if (user != null) {
-            final String uid = user.getUid();
-            NotePost post = new NotePost(uid, new Date(), noteTitle, newNote);
-            mDatabase.getReference("/posts/" + uid + "/notes").push().setValue(post);
-            Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
-//            posts.add(0, post.toString());
-
-            Log.d(TAG, "Note is " + post.toString());
-        }
-
+        final String uid = mFirebaseUser.getUid();
+        NotePost post = new NotePost(uid, new Date(), noteTitle, newNote);
+        mDatabase.getReference("/posts/" + uid + "/notes").push().setValue(post);
+        Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "Note is " + post.toString());
     }
 
     private void addNewImage(Intent data) {
@@ -457,14 +461,11 @@ public class MainActivity extends AppCompatActivity
         return URLEncoder.encode("https://www.facebook.com/" + userId + "/posts/" + postId, "UTF-8");
     }
 
-    public void getPostsFromDatabase() {
-        FirebaseUser user = mFirebaseAuth.getCurrentUser();
-        if (user != null) {
-            final String uid = user.getUid();
-            mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
-            mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
-            mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
-        }
+    public void attachPostListeners() {
+        final String uid = mFirebaseUser.getUid();
+        mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
+        mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
+        mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
     }
 
     private abstract class BaseChildEventListener implements ChildEventListener {
@@ -474,7 +475,8 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             Post post = getPostFromDataSnapshot(dataSnapshot);
-            MainActivity.this.posts.add(0, post);
+            MainActivity.this.posts.add(post);
+            Collections.sort(MainActivity.this.posts, new PostComparatorByDate());
             MainActivity.this.adapter.notifyDataSetChanged();
         }
 
@@ -482,6 +484,7 @@ public class MainActivity extends AppCompatActivity
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
             Post post = getPostFromDataSnapshot(dataSnapshot);
             MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            Collections.sort(MainActivity.this.posts, new PostComparatorByDate());
             MainActivity.this.adapter.notifyDataSetChanged();
         }
 
@@ -489,6 +492,7 @@ public class MainActivity extends AppCompatActivity
         public void onChildRemoved(DataSnapshot dataSnapshot) {
             Post post = getPostFromDataSnapshot(dataSnapshot);
             MainActivity.this.posts.remove(post);
+            Collections.sort(MainActivity.this.posts, new PostComparatorByDate());
             MainActivity.this.adapter.notifyDataSetChanged();
         }
 
