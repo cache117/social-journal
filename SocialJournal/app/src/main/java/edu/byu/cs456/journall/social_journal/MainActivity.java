@@ -45,6 +45,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +55,7 @@ import edu.byu.cs456.journall.social_journal.post.FacebookPost;
 import edu.byu.cs456.journall.social_journal.post.ImagePost;
 import edu.byu.cs456.journall.social_journal.post.NotePost;
 import edu.byu.cs456.journall.social_journal.post.Post;
+import edu.byu.cs456.journall.social_journal.post.PostComparatorByDate;
 
 
 public class MainActivity extends AppCompatActivity
@@ -231,26 +234,20 @@ public class MainActivity extends AppCompatActivity
     private List<Post> getFacebookPosts() {
         List<Post> listOfPosts = new ArrayList<>();
         FacebookPost post1 = new FacebookPost();
-        post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=480\" width=\"480\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post1);
         FacebookPost post2 = new FacebookPost();
-        post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=480\" width=\"480\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post2);
         FacebookPost post3 = new FacebookPost();
-        post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=480\" width=\"480\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post3);
         FacebookPost post4 = new FacebookPost();
-        post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=480\" width=\"480\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post4);
         FacebookPost post5 = new FacebookPost();
-        post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
+        post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=480\" width=\"480\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
         listOfPosts.add(post5);
-
-//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=500\" width=\"500\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=500\" width=\"500\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=500\" width=\"500\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
-//        listOfPosts.add("<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=500\" width=\"500\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>");
 
         return listOfPosts;
     }
@@ -470,25 +467,27 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private class FacebookChildEventListener implements ChildEventListener {
+    private abstract class BaseChildEventListener implements ChildEventListener {
+
+        protected abstract Post getPostFromDataSnapshot(DataSnapshot dataSnapshot);
 
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            Post post = dataSnapshot.getValue(FacebookPost.class);
+            Post post = getPostFromDataSnapshot(dataSnapshot);
             MainActivity.this.posts.add(0, post);
             MainActivity.this.adapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            Post post = dataSnapshot.getValue(FacebookPost.class);
+            Post post = getPostFromDataSnapshot(dataSnapshot);
             MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
             MainActivity.this.adapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            Post post = dataSnapshot.getValue(FacebookPost.class);
+            Post post = getPostFromDataSnapshot(dataSnapshot);
             MainActivity.this.posts.remove(post);
             MainActivity.this.adapter.notifyDataSetChanged();
         }
@@ -504,71 +503,25 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private class ImageChildEventListener implements ChildEventListener {
-
+    private class FacebookChildEventListener extends BaseChildEventListener {
         @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            Post post = dataSnapshot.getValue(ImagePost.class);
-            MainActivity.this.posts.add(0, post);
-            MainActivity.this.adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            Post post = dataSnapshot.getValue(ImagePost.class);
-            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
-            MainActivity.this.adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-            Post post = dataSnapshot.getValue(ImagePost.class);
-            MainActivity.this.posts.remove(post);
-            MainActivity.this.adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
+        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
+            return dataSnapshot.getValue(FacebookPost.class);
         }
     }
 
-    private class NoteChildEventListener implements ChildEventListener {
-
+    private class ImageChildEventListener extends BaseChildEventListener {
         @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            Post post = dataSnapshot.getValue(NotePost.class);
-            MainActivity.this.posts.add(0, post);
-            MainActivity.this.adapter.notifyDataSetChanged();
+        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
+            return dataSnapshot.getValue(ImagePost.class);
         }
+    }
+
+    private class NoteChildEventListener extends BaseChildEventListener {
 
         @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            Post post = dataSnapshot.getValue(NotePost.class);
-            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
-            MainActivity.this.adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-            Post post = dataSnapshot.getValue(NotePost.class);
-            MainActivity.this.posts.remove(post);
-            MainActivity.this.adapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
+        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
+            return dataSnapshot.getValue(NotePost.class);
         }
     }
 }

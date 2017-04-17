@@ -37,6 +37,9 @@ import com.bumptech.glide.Glide;
  */
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+    private final static int FACEBOOK_POST = 0;
+    private final static int TEXT_POST = 1;
+    private final static int IMAGE_POST = 2;
     private List<Post> mDataset;
     //    private List<String> mDataset;
     //private String[] mDataset;
@@ -73,11 +76,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
      * ViewHolder1 is for notes made in the app by the user. Contains a Title and a Body
      */
     public static class ViewHolder1 extends MyAdapter.ViewHolder {
-        public TextView mTextView;
+        public TextView mTextTitle;
+        public TextView mTextDate;
+        public TextView mTextBody;
 
         public ViewHolder1(View v) {
             super(v);
-            mTextView = (TextView) v.findViewById(R.id.text_view);
+            mTextTitle = (TextView) v.findViewById(R.id.text_view_title);
+            mTextDate = (TextView) v.findViewById(R.id.text_view_date);
+            mTextBody = (TextView) v.findViewById(R.id.text_view_body);
         }
     }
 
@@ -112,15 +119,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         //...
         //v.setTextSize(20);
         switch (viewType) {
-            case 0:
+            case FACEBOOK_POST:
                 View v0 = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.post, parent, false);
+                        .inflate(R.layout.web_view, parent, false);
                 return new ViewHolder0(v0);
-            case 1:
+            case TEXT_POST:
                 View v1 = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.text_view, parent, false);
                 return new ViewHolder1(v1);
-            case 2:
+            case IMAGE_POST:
                 View v2 = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.image_view, parent, false);
                 return new ViewHolder2(v2);
@@ -142,33 +149,27 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         switch (holder.getItemViewType()) {
             //facebook iframe
-            case 0:
+            case FACEBOOK_POST:
                 ViewHolder0 holder0 = (ViewHolder0) holder;
                 FacebookPost facebookPost = (FacebookPost) post;
                 holder0.mWebView.setInitialScale(getScale());
                 holder0.mWebView.loadDataWithBaseURL("https://facebook.com", facebookPost.toString(), "text/html", "utf-8", null);
                 break;
             //text note
-            case 1:
+            case TEXT_POST:
                 ViewHolder1 holder1 = (ViewHolder1) holder;
                 NotePost notePost = (NotePost) post;
                 String title = notePost.title;
                 String body = notePost.body;
-//                String delimeter = "\\(@\\)";
-//                String[] titleAndBody = post.split(delimeter);
-//                if (titleAndBody.length == 2) {
-//                    holder1.mTextView.setText(titleAndBody[0] + "\n\n" + titleAndBody[1]);
-//                } else {
-//                    holder1.mTextView.setText(titleAndBody[0]);
-//                }
+                String date = notePost.date.toString();
                 if (title != null) {
-                    holder1.mTextView.setText(title + "\n\n" + body);
-                } else {
-                    holder1.mTextView.setText(body);
+                    holder1.mTextTitle.setText(title);
                 }
+                holder1.mTextDate.setText(date);
+                holder1.mTextBody.setText(body);
                 break;
             //image
-            case 2:
+            case IMAGE_POST:
                 final ViewHolder2 holder2 = (ViewHolder2) holder;
                 ImagePost imagePost = (ImagePost) post;
                 StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl(imagePost.imageUrl);
@@ -195,25 +196,12 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public int getItemViewType(int position) {
         Post item = mDataset.get(position);
         if (item instanceof FacebookPost) {
-            return 0;
+            return FACEBOOK_POST;
         } else if (item instanceof ImagePost) {
-            return 2;
+            return IMAGE_POST;
         } else {
-            return 1;
+            return TEXT_POST;
         }
-
-//        //if the string starts out with "<iframe" then it is HTML for a WebView
-//        if (item.length() > 6 && item.substring(0, 7).equals("<iframe")) {
-//            return 0;
-//        }
-//        //if there is no whitespace it is a bitmap for an image
-//        else if (item.length() > 16 && item.substring(0, 16).equals("THIS IS A BITMAP")) {
-//            return 2;
-//        }
-//        //if it's not a WebView or bitmap, display the string in a TextView
-//        else {
-//            return 1;
-//        }
     }
 
     private int getScale() {
@@ -223,7 +211,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         Point size = new Point();
         display.getSize(size);
         int width = size.x;
-        Double val = new Double(width) / new Double(500);
+        Double val = new Double(width) / new Double(484);
         val = val * 100d;
         return val.intValue();
     }
