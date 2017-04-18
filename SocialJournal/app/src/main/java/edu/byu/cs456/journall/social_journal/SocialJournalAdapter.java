@@ -17,6 +17,8 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -42,7 +44,13 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
 
     private List<Post> mDataset;
     private Context mContext;
+    private FirebaseUser mFirebaseUser;
     private static final String TAG = SocialJournalAdapter.class.getCanonicalName();
+
+    public SocialJournalAdapter() {
+        mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+    }
+
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -103,6 +111,7 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         public TextView mStatus;
         public TextView mDate;
         public TextView mMessage;
+        public ImageView mAttachmentImage;
 
         public FacebookViewHolder(View v) {
             super(v);
@@ -110,6 +119,7 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
             mStatus = (TextView) v.findViewById(R.id.facebook_post_status);
             mDate = (TextView) v.findViewById(R.id.facebook_post_date);
             mMessage = (TextView) v.findViewById(R.id.facebook_post_message);
+            mAttachmentImage = (ImageView) v.findViewById(R.id.facebook_post_image);
         }
     }
 
@@ -175,9 +185,21 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     private void handleFacebookPost(ViewHolder holder, Post post) {
         FacebookViewHolder facebookViewHolder = (FacebookViewHolder) holder;
         FacebookPost facebookPost = (FacebookPost) post;
-        facebookViewHolder.mStatus.setText(facebookPost.story);
         facebookViewHolder.mDate.setText(facebookPost.date.toString());
+        facebookViewHolder.mStatus.setText(facebookPost.story);
         facebookViewHolder.mMessage.setText(facebookPost.message);
+        String downloadUrl = facebookPost.photoUrl;
+        if (downloadUrl != null) {
+            Glide.with(facebookViewHolder.mProfilePicture.getContext())
+                    .load(downloadUrl)
+                    .into(facebookViewHolder.mProfilePicture);
+        }
+        String attachmentUrl = facebookPost.attachmentUrl;
+        if (attachmentUrl != null) {
+            Glide.with(facebookViewHolder.mAttachmentImage.getContext())
+                    .load(attachmentUrl)
+                    .into(facebookViewHolder.mAttachmentImage);
+        }
     }
 
     private void handleWebPost(ViewHolder holder, Post post) {
@@ -203,8 +225,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     private void handleImagePost(ViewHolder holder, Post post) {
         final ImageViewHolder imageViewHolder = (ImageViewHolder) holder;
         ImagePost imagePost = (ImagePost) post;
-        StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl(imagePost.imageUrl);
-        storageReference.getDownloadUrl().addOnCompleteListener(new ImageDownloadOnCompleteListener(imageViewHolder));
+        try {
+            StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl(imagePost.imageUrl);
+            storageReference.getDownloadUrl().addOnCompleteListener(new ImageDownloadOnCompleteListener(imageViewHolder));
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Trying to get a reference for an image that is not loaded. Try again");
+        }
     }
 
     private class ImageDownloadOnCompleteListener implements OnCompleteListener<Uri> {

@@ -2,6 +2,7 @@ package edu.byu.cs456.journall.social_journal;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -42,6 +43,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.ParseException;
@@ -171,6 +173,35 @@ public class MainActivity extends AppCompatActivity
                 users.child(uid).child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
             }
         }
+//        new LoadImageTask(new LoadImageTask.Listener() {
+//            @Override
+//            public void onImageLoaded(Bitmap bitmap) {
+//                byte[] bytes = getByteArrayFromBitmap(bitmap);
+//                UploadTask uploadTask = mDatabase.getReference("/users").child(mFirebaseUser.getUid()).child("photo_url");
+//            .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(DatabaseError databaseError) {
+//
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void onError() {
+//
+//            }
+//
+//            private byte[] getByteArrayFromBitmap(Bitmap bitmap) {
+//                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+//                return baos.toByteArray();
+//            }
+//        }).execute(mPhotoUrl);
     }
 
     private void onBoarding() {
@@ -195,7 +226,7 @@ public class MainActivity extends AppCompatActivity
         /* make the API call */
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
-                "/me/feed",
+                "/me/feed?fields=id,created_time,message,story,picture,type",
                 null,
                 HttpMethod.GET,
                 new ImportExistingPostsCallback(uid)
@@ -247,7 +278,25 @@ public class MainActivity extends AppCompatActivity
             } catch (JSONException ignored) {
 
             }
-            return new FacebookPost(uid, date, postId, message, story);
+            String pictureUrl = null;
+            try {
+                pictureUrl = row.getString("picture");
+            }
+            catch (JSONException ignored)
+            {
+
+            }
+            String type = null;
+            try {
+                type = row.getString("type");
+            } catch (JSONException ignored) {
+
+            }
+            FacebookPost facebookPost = new FacebookPost(uid, date, postId, message, story);
+            facebookPost.photoUrl = MainActivity.this.mPhotoUrl;
+            facebookPost.attachmentUrl = pictureUrl;
+            facebookPost.type = type;
+            return facebookPost;
 //            return new FacebookPost(uid, date, postId);
         }
     }
@@ -398,26 +447,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
-    private void putImageInStorage(final StorageReference storageReference, Uri uri, final String key) {
-        storageReference.putFile(uri).addOnCompleteListener(MainActivity.this,
-                new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            String uid = mFirebaseUser.getUid();
-                            @SuppressWarnings("VisibleForTests")
-                            ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, task.getResult().getMetadata().getDownloadUrl().toString());
-                            image.key = key;
-
-                            mDatabase.getReference().child("posts").child(uid).child("images").child(key).setValue(image);
-                        } else {
-                            Log.w(TAG, "Image upload task was not successful.", task.getException());
-                        }
-                    }
-                });
-    }
-
     private void addNewNote(String noteTitle, String newNote) {
         final String uid = mFirebaseUser.getUid();
         NotePost post = new NotePost(uid, new Date(), noteTitle, newNote);
@@ -452,6 +481,25 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+    }
+
+    private void putImageInStorage(final StorageReference storageReference, Uri uri, final String key) {
+        storageReference.putFile(uri).addOnCompleteListener(MainActivity.this,
+                new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            String uid = mFirebaseUser.getUid();
+                            @SuppressWarnings("VisibleForTests")
+                            ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, task.getResult().getMetadata().getDownloadUrl().toString());
+                            image.key = key;
+
+                            mDatabase.getReference().child("posts").child(uid).child("images").child(key).setValue(image);
+                        } else {
+                            Log.w(TAG, "Image upload task was not successful.", task.getException());
+                        }
+                    }
+                });
     }
 
     private void openSettings() {

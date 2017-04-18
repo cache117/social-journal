@@ -19,8 +19,9 @@ public class FacebookPost extends Post {
 
     public String message;
     public String story;
-    @Exclude
-    public String profilePicture;
+    public String attachmentUrl;
+    public String photoUrl;
+    public String type;
 
     public FacebookPost() {
 
