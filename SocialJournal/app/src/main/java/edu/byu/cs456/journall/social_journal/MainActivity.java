@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity
             try {
                 JSONArray data = (JSONArray) response.getJSONObject().get("data");
                 if (data.length() != 0) {
-                    int length = data.length() > 7 ? 7 : data.length();
+                    int length = data.length() > 25 ? 25 : data.length();
                     for (int i = 0; i < length; ++i) {
                         JSONObject row = data.getJSONObject(i);
                         FacebookPost post = getFacebookPostFromRow(row);
