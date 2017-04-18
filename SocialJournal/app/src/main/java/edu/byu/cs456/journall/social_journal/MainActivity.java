@@ -399,7 +399,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void putImageInStorage(StorageReference storageReference, Uri uri, final String key) {
+    private void putImageInStorage(final StorageReference storageReference, Uri uri, final String key) {
         storageReference.putFile(uri).addOnCompleteListener(MainActivity.this,
                 new OnCompleteListener<UploadTask.TaskSnapshot>() {
                     @Override
@@ -408,8 +408,9 @@ public class MainActivity extends AppCompatActivity
                             String uid = mFirebaseUser.getUid();
                             @SuppressWarnings("VisibleForTests")
                             ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, task.getResult().getMetadata().getDownloadUrl().toString());
+                            image.key = key;
 
-                            mDatabase.getReference().child("post").child(uid).child("images").child(key).setValue(image);
+                            mDatabase.getReference().child("posts").child(uid).child("images").child(key).setValue(image);
                         } else {
                             Log.w(TAG, "Image upload task was not successful.", task.getException());
                         }
@@ -430,26 +431,27 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Uri: " + uri.toString());
         String uid = mFirebaseUser.getUid();
         ImagePost tempPost = new ImagePost(uid, new Date(), mPhotoUrl);
-        FirebaseDatabase
+        DatabaseReference databaseReference = FirebaseDatabase
                 .getInstance()
                 .getReference("posts")
                 .child(uid)
                 .child("images")
-                .push()
-                .setValue(tempPost, new DatabaseReference.CompletionListener() {
-                    @Override
-                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                        if (databaseError == null) {
-                            String key = databaseReference.getKey();
-                            StorageReference storageReference = FirebaseStorage
-                                    .getInstance()
-                                    .getReference(mFirebaseUser.getUid())
-                                    .child(key)
-                                    .child(uri.getLastPathSegment());
-                            putImageInStorage(storageReference, uri, key);
-                        }
-                    }
-                });
+                .push();
+        tempPost.key = databaseReference.getKey();
+        databaseReference.setValue(tempPost, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if (databaseError == null) {
+                    String key = databaseReference.getKey();
+                    StorageReference storageReference = FirebaseStorage
+                            .getInstance()
+                            .getReference(mFirebaseUser.getUid())
+                            .child(key)
+                            .child(uri.getLastPathSegment());
+                    putImageInStorage(storageReference, uri, key);
+                }
+            }
+        });
     }
 
     private void openSettings() {
@@ -515,7 +517,12 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
             Post post = getPostFromDataSnapshot(dataSnapshot);
-            MainActivity.this.posts.set(MainActivity.this.posts.indexOf(post), post);
+            int index = MainActivity.this.posts.indexOf(post);
+            if (index != -1) {
+                MainActivity.this.posts.set(index, post);
+            } else {
+                MainActivity.this.posts.add(post);
+            }
             Collections.sort(MainActivity.this.posts, new PostComparatorByDate());
             MainActivity.this.adapter.notifyDataSetChanged();
         }

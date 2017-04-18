@@ -16,8 +16,8 @@ import java.util.Date;
 public class ImagePost extends Post {
     public String photoUrl;
     public String imageUrl;
+    public String key;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
-
 
     public ImagePost() {
     }
@@ -32,7 +32,28 @@ public class ImagePost extends Post {
         this(userId, date, photoUrl, LOADING_IMAGE_URL);
     }
 
-//    @Override
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ImagePost imagePost = (ImagePost) o;
+
+        if (!photoUrl.equals(imagePost.photoUrl)) return false;
+        if (!userId.equals(imagePost.userId)) return false;
+        return key.equals(imagePost.key);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = photoUrl.hashCode();
+        result = 31 * result + userId.hashCode();
+        result = 31 * result + key.hashCode();
+        return result;
+    }
+
+    //    @Override
 //    public String toString() {
 //        String imageAsString = bitMapToString(image);
 //        String preface = "THIS IS A BITMAP"; //insert this before the bits in a bitmap
