@@ -10,50 +10,44 @@
             android:id="@+id/facebook_post_profile_picture"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_heightPercent="10%"
-            app:layout_widthPercent="10%" />
+            android:contentDescription="@string/post_profile_picture"
+            app:layout_heightPercent="20%"
+            app:layout_widthPercent="20%" />
 
-        <LinearLayout
-            android:id="@+id/facebook_status_information"
+        <TextView
+            android:id="@+id/facebook_post_status"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
-            android:orientation="horizontal"
-            app:layout_heightPercent="5%"
-            app:layout_widthPercent="90%">
-
-            <TextView
-                android:id="@+id/facebook_post_name"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:textSize="16sp"
-                app:layout_widthPercent="50%" />
-
-            <TextView
-                android:id="@+id/facebook_post_status"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                app:layout_widthPercent="50%" />
-        </LinearLayout>
+            android:textSize="14sp"
+            android:textColor="#000000"
+            app:layout_heightPercent="10%"
+            app:layout_widthPercent="80%" />
 
         <TextView
             android:id="@+id/facebook_post_date"
-            android:layout_below="@+id/facebook_status_information"
+            android:layout_below="@+id/facebook_post_status"
             android:layout_toEndOf="@+id/facebook_post_profile_picture"
-            app:layout_heightPercent="5%"
-            app:layout_widthPercent="90%"
-            android:textSize="16sp" />
+            android:textColor="#BDBDBD"
+            android:textSize="14sp"
+            app:layout_heightPercent="10%"
+            app:layout_widthPercent="90%" />
 
         <TextView
             android:id="@+id/facebook_post_message"
             android:layout_below="@+id/facebook_post_profile_picture"
+            android:textSize="24sp"
+            android:textColor="#000000"
             app:layout_heightPercent="30%"
-            android:textSize="25sp"/>
+            app:layout_widthPercent="100%" />
 
         <ImageView
             android:id="@+id/facebook_post_image"
             android:layout_below="@+id/facebook_post_message"
+            android:contentDescription="@string/facebook_post_image"
             app:layout_heightPercent="40%"
-            android:contentDescription="@string/facebook_post_image" />
+            app:layout_widthPercent="100%" />
     </android.support.percent.PercentRelativeLayout>
 
 

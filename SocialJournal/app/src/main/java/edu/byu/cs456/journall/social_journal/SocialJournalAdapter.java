@@ -100,7 +100,6 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
 
     public static class FacebookViewHolder extends SocialJournalAdapter.ViewHolder {
         public ImageView mProfilePicture;
-        public TextView mName;
         public TextView mStatus;
         public TextView mDate;
         public TextView mMessage;
@@ -108,7 +107,6 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         public FacebookViewHolder(View v) {
             super(v);
             mProfilePicture = (ImageView) v.findViewById(R.id.facebook_post_profile_picture);
-            mName = (TextView) v.findViewById(R.id.facebook_post_name);
             mStatus = (TextView) v.findViewById(R.id.facebook_post_status);
             mDate = (TextView) v.findViewById(R.id.facebook_post_date);
             mMessage = (TextView) v.findViewById(R.id.facebook_post_message);
