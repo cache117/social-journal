@@ -173,35 +173,6 @@ public class MainActivity extends AppCompatActivity
                 users.child(uid).child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
             }
         }
-//        new LoadImageTask(new LoadImageTask.Listener() {
-//            @Override
-//            public void onImageLoaded(Bitmap bitmap) {
-//                byte[] bytes = getByteArrayFromBitmap(bitmap);
-//                UploadTask uploadTask = mDatabase.getReference("/users").child(mFirebaseUser.getUid()).child("photo_url");
-//            .addListenerForSingleValueEvent(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onCancelled(DatabaseError databaseError) {
-//
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void onError() {
-//
-//            }
-//
-//            private byte[] getByteArrayFromBitmap(Bitmap bitmap) {
-//                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-//                return baos.toByteArray();
-//            }
-//        }).execute(mPhotoUrl);
     }
 
     private void onBoarding() {
@@ -281,9 +252,7 @@ public class MainActivity extends AppCompatActivity
             String pictureUrl = null;
             try {
                 pictureUrl = row.getString("picture");
-            }
-            catch (JSONException ignored)
-            {
+            } catch (JSONException ignored) {
 
             }
             String type = null;
@@ -297,7 +266,6 @@ public class MainActivity extends AppCompatActivity
             facebookPost.attachmentUrl = pictureUrl;
             facebookPost.type = type;
             return facebookPost;
-//            return new FacebookPost(uid, date, postId);
         }
     }
 
@@ -365,12 +333,12 @@ public class MainActivity extends AppCompatActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            openSettings();
-            return true;
-        }
+//        int id = item.getItemId();
+//
+//        if (id == R.id.action_settings) {
+//            openSettings();
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -391,10 +359,10 @@ public class MainActivity extends AppCompatActivity
                 addPicture();
                 //send to picture page
                 break;
-//            case R.id.nav_show_calendar:
-//                showCalendar();
-//                //send to calendar page
-//                break;
+            case R.id.nav_show_calendar:
+                showCalendar();
+                //send to calendar page
+                break;
             case R.id.nav_settings:
                 //send to settings page
                 openSettings();
@@ -530,8 +498,28 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void navigateToDay(int year, int month, int day) {
-
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month, day, 0, 0, 0);
+        int closestPost = getIndexOfClosestPost(calendar.getTime());
         Toast.makeText(getApplicationContext(), day + "/" + month + "/" + year, Toast.LENGTH_LONG).show();
+        layoutManager.scrollToPosition(closestPost);
+    }
+
+    private int getIndexOfClosestPost(Date wantedDate) {
+        double closestDistance = Double.MAX_VALUE;
+        int closestIndex = -1;
+        for (int i = 0; i < posts.size(); ++i)
+        {
+            Post post = posts.get(i);
+            Date date = post.date;
+            double distance = Math.abs(date.getTime() - wantedDate.getTime());
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+        return closestIndex;
     }
 
     private String generateFacebookPostHTML(String userId, String postId) throws UnsupportedEncodingException {
