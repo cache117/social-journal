@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity
         /* make the API call */
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
-                "/me/feed?fields=id,created_time,message,story,picture,type",
+                "/me/feed?fields=id,created_time,message,story,full_picture,type",
                 null,
                 HttpMethod.GET,
                 new ImportExistingPostsCallback(uid)
@@ -220,6 +220,7 @@ public class MainActivity extends AppCompatActivity
                     int length = data.length() > 25 ? 25 : data.length();
                     for (int i = 0; i < length; ++i) {
                         JSONObject row = data.getJSONObject(i);
+                        Log.d("OBJECT_ID", row.toString());
                         FacebookPost post = getFacebookPostFromRow(row);
                         mDatabase.getReference("/posts").child(uid).child("facebook_posts").push().setValue(post);
                     }
@@ -240,6 +241,7 @@ public class MainActivity extends AppCompatActivity
             String message = null;
             try {
                 message = row.getString("message");
+                Log.d("OBJECT_ID", row.toString());
             } catch (JSONException ignored) {
 
             }
@@ -251,13 +253,14 @@ public class MainActivity extends AppCompatActivity
             }
             String pictureUrl = null;
             try {
-                pictureUrl = row.getString("picture");
+                pictureUrl = row.getString("full_picture");
             } catch (JSONException ignored) {
 
             }
             String type = null;
             try {
                 type = row.getString("type");
+
             } catch (JSONException ignored) {
 
             }
@@ -281,26 +284,7 @@ public class MainActivity extends AppCompatActivity
      */
     private List<Post> getFacebookPosts() {
         List<Post> listOfPosts = new ArrayList<>();
-//        WebPost post1 = new WebPost();
-//        post1.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=480\" width=\"480\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-//        post1.date = getDate(2017, 3, 25);
-//        listOfPosts.add(post1);
-//        WebPost post2 = new WebPost();
-//        post2.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fverycleanfunnypics%2Fposts%2F1564340500243860%3A0&width=480\" width=\"480\" height=\"502\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-//        post2.date = getDate(2017, 3, 24);
-//        listOfPosts.add(post2);
-//        WebPost post3 = new WebPost();
-//        post3.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154420774477759&width=480\" width=\"480\" height=\"607\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-//        post3.date = getDate(2017, 2, 15);
-//        listOfPosts.add(post3);
-//        WebPost post4 = new WebPost();
-//        post4.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Fposts%2F10154301387472759&width=480\" width=\"480\" height=\"442\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-//        post4.date = getDate(2017, 1, 12);
-//        listOfPosts.add(post4);
-//        WebPost post5 = new WebPost();
-//        post5.url = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fmcall2%2Ftimeline%2Fstory%3Fut%3D32%26wstart%3D-2051193600%26wend%3D2147483647%26hash%3D10151102807557759%26pagefilter%3D3%26ustart%3D1&width=480\" width=\"480\" height=\"249\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-//        post5.date = getDate(2013, 8, 15);
-//        listOfPosts.add(post5);
+//        Posts.add(post5);
 
         return listOfPosts;
     }

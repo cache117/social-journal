@@ -18,9 +18,11 @@ public class FacebookPostView extends LinearLayout {
 
     private FacebookPost facebookPost;
     private String title;
+    private String message;
     private Bitmap image;
     private TextView titleView;
     private ImageView imageView;
+    private TextView messageView;
 
     public FacebookPostView(Context context){
         super(context);
@@ -74,8 +76,10 @@ public class FacebookPostView extends LinearLayout {
     protected void onFinishInflate(){
         super.onFinishInflate();
 
-        titleView = (TextView) this.findViewById(R.id.facebook_post_message);
+        titleView = (TextView) this.findViewById(R.id.facebook_post_status);
         titleView.setText(title);
+        messageView = (TextView) this.findViewById(R.id.facebook_post_message);
+        messageView.setText(message);
         imageView = (ImageView) this.findViewById(R.id.facebook_post_image);
         imageView.setImageBitmap(image);
     }
