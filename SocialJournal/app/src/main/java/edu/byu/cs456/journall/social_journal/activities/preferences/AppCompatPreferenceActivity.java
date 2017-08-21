@@ -1,4 +1,4 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.activities.preferences;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

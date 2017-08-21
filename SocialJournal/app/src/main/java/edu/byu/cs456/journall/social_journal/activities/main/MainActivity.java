@@ -1,12 +1,9 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.activities.main;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -45,9 +42,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.ParseException;
@@ -59,12 +53,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import edu.byu.cs456.journall.social_journal.post.FacebookPost;
-import edu.byu.cs456.journall.social_journal.post.ImagePost;
-import edu.byu.cs456.journall.social_journal.post.NotePost;
-import edu.byu.cs456.journall.social_journal.post.Post;
-import edu.byu.cs456.journall.social_journal.post.PostComparatorByDate;
-import edu.byu.cs456.journall.social_journal.post.WebPost;
+import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.note.AddNote;
+import edu.byu.cs456.journall.social_journal.activities.calendar.JournalCalendar;
+import edu.byu.cs456.journall.social_journal.activities.preferences.SettingsActivity;
+import edu.byu.cs456.journall.social_journal.views.SocialJournalAdapter;
+import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
+import edu.byu.cs456.journall.social_journal.models.post.ImagePost;
+import edu.byu.cs456.journall.social_journal.models.post.NotePost;
+import edu.byu.cs456.journall.social_journal.models.post.Post;
+import edu.byu.cs456.journall.social_journal.models.post.PostComparatorByDate;
 
 
 public class MainActivity extends AppCompatActivity

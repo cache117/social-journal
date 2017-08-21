@@ -1,15 +1,11 @@
-package edu.byu.cs456.journall.social_journal.post;
-
-import android.graphics.Bitmap;
-import android.util.Base64;
+package edu.byu.cs456.journall.social_journal.models.post;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Date;
 
 /**
- * Created by cstaheli on 4/11/2017.
+ * A representation of an Image Post.
  */
 
 @IgnoreExtraProperties

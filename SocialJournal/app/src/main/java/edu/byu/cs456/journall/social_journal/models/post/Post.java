@@ -1,14 +1,13 @@
-package edu.byu.cs456.journall.social_journal.post;
+package edu.byu.cs456.journall.social_journal.models.post;
 
 import android.support.annotation.NonNull;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 
-import java.util.Comparator;
 import java.util.Date;
 
 /**
- * Created by cstaheli on 4/10/2017.
+ * Contains the basic information about posts.
  */
 
 @IgnoreExtraProperties

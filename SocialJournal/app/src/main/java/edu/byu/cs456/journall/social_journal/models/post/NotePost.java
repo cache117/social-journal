@@ -1,11 +1,11 @@
-package edu.byu.cs456.journall.social_journal.post;
+package edu.byu.cs456.journall.social_journal.models.post;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.Date;
 
 /**
- * Created by cstaheli on 4/11/2017.
+ * A representation of a Note Post.
  */
 
 @IgnoreExtraProperties

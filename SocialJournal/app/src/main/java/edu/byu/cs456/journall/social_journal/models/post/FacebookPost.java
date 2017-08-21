@@ -1,15 +1,14 @@
-package edu.byu.cs456.journall.social_journal.post;
+package edu.byu.cs456.journall.social_journal.models.post;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.Date;
 
 /**
- * Created by cstaheli on 4/11/2017.
+ * A representation of a Facebook Post.
  */
 
 @IgnoreExtraProperties

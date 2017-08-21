@@ -1,15 +1,19 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.activities.calendar;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.icu.util.Calendar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.widget.CalendarView;
-import android.widget.Toast;
 
+import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
+
+/**
+ * The Activity for the calendar.
+ */
 public class JournalCalendar extends AppCompatActivity {
     private CalendarView calendar;
 

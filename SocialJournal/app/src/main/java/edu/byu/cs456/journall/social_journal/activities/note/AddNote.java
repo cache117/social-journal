@@ -1,4 +1,4 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.activities.note;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -12,7 +12,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
+
+import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
 
 public class AddNote extends AppCompatActivity {
     private String note;

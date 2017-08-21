@@ -1,4 +1,4 @@
-package edu.byu.cs456.journall.social_journal.post;
+package edu.byu.cs456.journall.social_journal.models.post;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 

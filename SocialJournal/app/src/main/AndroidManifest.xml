@@ -21,11 +21,11 @@
             android:value="@string/facebook_app_id" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.main.MainActivity"
             android:label="@string/app_name">
 
         </activity>
-        <activity android:name=".Splash">
+        <activity android:name=".activities.login.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,20 +33,20 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AddNote"
+            android:name=".activities.note.AddNote"
             android:label="@string/title_activity_add_note"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".activities.main.MainActivity" />
         <activity
-            android:name=".JournalCalendar"
+            android:name=".activities.calendar.JournalCalendar"
             android:label="@string/title_activity_calendar"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".activities.main.MainActivity" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".activities.login.LoginActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login"
             android:noHistory="false" />
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activities.preferences.SettingsActivity"
             android:label="@string/title_activity_settings" />
         <activity
             android:name="com.facebook.FacebookActivity"

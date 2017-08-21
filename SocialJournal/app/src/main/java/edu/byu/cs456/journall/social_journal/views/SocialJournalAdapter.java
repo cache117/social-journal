@@ -1,4 +1,4 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.views;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -24,11 +24,12 @@ import com.google.firebase.storage.StorageReference;
 
 import java.util.List;
 
-import edu.byu.cs456.journall.social_journal.post.FacebookPost;
-import edu.byu.cs456.journall.social_journal.post.ImagePost;
-import edu.byu.cs456.journall.social_journal.post.NotePost;
-import edu.byu.cs456.journall.social_journal.post.Post;
-import edu.byu.cs456.journall.social_journal.post.WebPost;
+import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
+import edu.byu.cs456.journall.social_journal.models.post.ImagePost;
+import edu.byu.cs456.journall.social_journal.models.post.NotePost;
+import edu.byu.cs456.journall.social_journal.models.post.Post;
+import edu.byu.cs456.journall.social_journal.models.post.WebPost;
 
 import com.bumptech.glide.Glide;
 

@@ -1,4 +1,4 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.activities.preferences;
 
 
 import android.annotation.TargetApi;
@@ -21,6 +21,8 @@ import android.text.TextUtils;
 import android.view.MenuItem;
 
 import java.util.List;
+
+import edu.byu.cs456.journall.social_journal.R;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On

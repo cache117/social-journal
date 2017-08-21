@@ -1,4 +1,4 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -8,10 +8,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import edu.byu.cs456.journall.social_journal.post.FacebookPost;
+import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
 
 /**
- * Created by Michael on 4/15/2017.
+ * The view for a Facebook Post.
  */
 
 public class FacebookPostView extends LinearLayout {

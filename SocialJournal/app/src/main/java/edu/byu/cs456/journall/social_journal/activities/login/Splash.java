@@ -1,9 +1,11 @@
-package edu.byu.cs456.journall.social_journal;
+package edu.byu.cs456.journall.social_journal.activities.login;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Bundle;
+
+import edu.byu.cs456.journall.social_journal.R;
 
 public class Splash extends Activity {
 
