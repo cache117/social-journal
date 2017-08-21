@@ -2,9 +2,11 @@ package edu.byu.cs456.journall.social_journal;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -44,6 +46,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.ParseException;
@@ -408,6 +412,27 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addNewImage(Intent data) {
+//        File file = new File(String.valueOf(data.getData()));
+//        Date modifiedDate = new Date(file.lastModified());
+//        Bitmap bitmap = null;
+//        try {
+//            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        String[] projection = new String[]{
+//                MediaStore.Images.Media._ID,
+//                MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+//                MediaStore.Images.Media.DATE_TAKEN
+//        };
+//        Cursor cur = MediaStore.Images.Media.query(this.getContentResolver(), data.getData(), projection);
+//        if (cur.moveToFirst())
+//        {
+//            long date = cur.getLong(cur.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN));
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.setTimeInMillis(date);
+//            modifiedDate = calendar.getTime();
+//        }
         final Uri uri = data.getData();
         Log.d(TAG, "Uri: " + uri.toString());
         String uid = mFirebaseUser.getUid();
