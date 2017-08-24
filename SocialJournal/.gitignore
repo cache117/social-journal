@@ -128,3 +128,6 @@ fabric.properties
 !.idea/gradle.xml
 !app/google-services.json
 !gradle/wrapper/gradle-wrapper.jar
+
+#Secrets
+**/*/res/values/secrets.xml
