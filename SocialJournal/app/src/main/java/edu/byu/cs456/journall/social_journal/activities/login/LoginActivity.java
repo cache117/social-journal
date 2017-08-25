@@ -1,10 +1,13 @@
 package edu.byu.cs456.journall.social_journal.activities.login;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -22,11 +25,13 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.concurrent.Callable;
+
 import edu.byu.cs456.journall.social_journal.R;
 import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
 
 /**
- * A login screen that offers login via Facebook
+ * A login screen that offers login via Facebook and Instagram
  */
 public class LoginActivity extends AppCompatActivity {
 
@@ -41,6 +46,61 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         initializeFirebaseAuth();
         initializeFacebookLogin();
+        initializeInstagramLogin();
+    }
+
+    private void initializeInstagramLogin() {
+        checkForInstagramData();
+
+        Button mInstagramSignInButton = (Button) findViewById(R.id.instagram_sign_in_button);
+        mInstagramSignInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signInWithInstagram();
+            }
+        });
+    }
+
+    private void signInWithInstagram() {
+        final Uri.Builder uriBuilder = new Uri.Builder();
+        uriBuilder.scheme("https")
+                .authority("api.instagram.com")
+                .appendPath("oauth")
+                .appendPath("authorize")
+                .appendQueryParameter("client_id", getString(R.string.instagram_client_id))
+                .appendQueryParameter("redirect_uri", "socialjournal://redirect")
+                .appendQueryParameter("response_type", "token");
+        final Intent browser = new Intent(Intent.ACTION_VIEW, uriBuilder.build());
+        startActivity(browser);
+    }
+
+    private void checkForInstagramData() {
+        final Uri data = this.getIntent().getData();
+        if(data != null && data.getScheme().equals("sociallogin") && data.getFragment() != null) {
+            final String accessToken = data.getFragment().replaceFirst("access_token=", "");
+            if (accessToken != null) {
+                handleSignInResult(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        // Do nothing, just throw the access token away.
+                        return null;
+                    }
+                });
+            } else {
+                handleSignInResult(null);
+            }
+        }
+    }
+
+    private void handleSignInResult(Callable<Void> logout) {
+        if(logout == null) {
+            /* Login error */
+            Toast.makeText(getApplicationContext(), R.string.login_error, Toast.LENGTH_SHORT).show();
+        } else {
+            /* Login success */
+            //Application.getInstance().setLogoutCallable(logout);
+            startActivity(new Intent(this, MainActivity.class));
+        }
     }
 
     private void initializeFirebaseAuth() {
@@ -135,7 +195,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    public void signOut(){
+    public void signOut() {
         mAuth.signOut();
         LoginManager.getInstance().logOut();
     }

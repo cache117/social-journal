@@ -44,7 +44,16 @@
             android:name=".activities.login.LoginActivity"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login"
-            android:noHistory="false" />
+            android:noHistory="false">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="socialjournal" android:host="redirect" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".activities.preferences.SettingsActivity"
             android:label="@string/title_activity_settings" />

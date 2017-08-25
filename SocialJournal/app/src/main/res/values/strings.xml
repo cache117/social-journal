@@ -113,4 +113,6 @@
     <string name="image_view_descr">Added image</string>
     <string name="facebook_post_image">Facebook Post Image</string>
     <string name="post_profile_picture">Post Profile Picture</string>
+    <string name="action_sign_in_with_instagram">Sign In With Instagram</string>
+    <string name="login_error">Error logging into Instagram</string>
 </resources>
