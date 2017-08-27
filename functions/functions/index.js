@@ -20,5 +20,5 @@ exports.bigben = functions.https.onRequest((req, res) => {
 });
 
 exports.redirect = functions.https.onRequest((req, res) => {
-	res.status(301).redirect('socialjournal://redirect');
+	res.status(200).redirect('socialjournal://redirect');
 });
