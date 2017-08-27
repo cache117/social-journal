@@ -68,7 +68,7 @@ public class LoginActivity extends AppCompatActivity {
                 .appendPath("oauth")
                 .appendPath("authorize")
                 .appendQueryParameter("client_id", getString(R.string.instagram_client_id))
-                .appendQueryParameter("redirect_uri", "socialjournal://redirect")
+                .appendQueryParameter("redirect_uri", "https://us-central1-socialjournal-7aa8c.cloudfunctions.net/redirect")
                 .appendQueryParameter("response_type", "token");
         final Intent browser = new Intent(Intent.ACTION_VIEW, uriBuilder.build());
         startActivity(browser);

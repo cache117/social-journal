@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 
 import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.login.LoginActivity;
 import edu.byu.cs456.journall.social_journal.activities.note.AddNote;
 import edu.byu.cs456.journall.social_journal.activities.calendar.JournalCalendar;
 import edu.byu.cs456.journall.social_journal.activities.preferences.SettingsActivity;
@@ -353,11 +354,22 @@ public class MainActivity extends AppCompatActivity
                 //send to settings page
                 openSettings();
                 break;
+            case R.id.nav_log_out:
+                // Log the user out and send them to log in
+                logOut();
+                break;
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void logOut() {
+        mFirebaseAuth.signOut();
+        Log.d(TAG, "Logging Out");
+        Intent home = new Intent(this, LoginActivity.class);
+        startActivity(home);
     }
 
     @Override

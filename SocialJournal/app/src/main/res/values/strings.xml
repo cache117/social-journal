@@ -115,4 +115,5 @@
     <string name="post_profile_picture">Post Profile Picture</string>
     <string name="action_sign_in_with_instagram">Sign In With Instagram</string>
     <string name="login_error">Error logging into Instagram</string>
+    <string name="log_out_text">Log Out</string>
 </resources>
