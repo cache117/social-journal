@@ -109,3 +109,5 @@ typings/
 # dotenv environment variables file
 .env
 
+#Firebase file
+/**/service-account.json
