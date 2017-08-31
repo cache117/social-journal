@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "socialjournal-7aa8c"
+    "default": "socialjournal-7aa8c",
+    "SocialJournal": "socialjournal-7aa8c"
   }
 }

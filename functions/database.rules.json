@@ -1,6 +1,10 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null"
+    "instagramAccessToken": {
+      "$uid": {
+        ".read": "auth.uid === $uid",
+        ".write": "auth.uid === $uid"
+      }
+    }
   }
 }
