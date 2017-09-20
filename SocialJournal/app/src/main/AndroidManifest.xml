@@ -17,6 +17,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
         <meta-data
+            android:name="com.instagram.instagramapi.InstagramAppClientId"
+            android:value="@string/instagram_client_id" />
+
+        <meta-data
+            android:name="com.instagram.instagramapi.InstagramAppRedirectURL"
+            android:value="@string/instagram_callback_uri" />
+
+        <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
 
@@ -42,9 +50,7 @@
             android:parentActivityName=".activities.main.MainActivity" />
         <activity
             android:name=".activities.login.LoginActivity"
-            android:excludeFromRecents="true"
-            android:label="@string/title_activity_login"
-            android:noHistory="false">
+            android:label="@string/title_activity_login">
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -56,6 +62,10 @@
                     android:host="redirect"
                     android:pathPattern="/.*"
                     android:scheme="socialjournal" />
+                <data
+                    android:host="us-central1-socialjournal-7aa8c.cloudfunctions.net"
+                    android:pathPattern="/.*"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
 

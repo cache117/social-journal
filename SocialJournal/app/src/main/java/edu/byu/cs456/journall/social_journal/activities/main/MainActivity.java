@@ -2,8 +2,10 @@ package edu.byu.cs456.journall.social_journal.activities.main;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -37,13 +39,21 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.instagram.instagramapi.activities.InstagramAuthActivity;
+import com.instagram.instagramapi.engine.InstagramEngine;
+import com.instagram.instagramapi.engine.InstagramKitConstants;
+import com.instagram.instagramapi.exceptions.InstagramException;
+import com.instagram.instagramapi.interfaces.InstagramAPIResponseCallback;
+import com.instagram.instagramapi.objects.IGMedia;
+import com.instagram.instagramapi.objects.IGPagInfo;
+import com.instagram.instagramapi.objects.IGSession;
+import com.instagram.instagramapi.objects.IGUser;
+import com.instagram.instagramapi.utils.InstagramKitLoginScope;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -72,6 +82,7 @@ public class MainActivity extends AppCompatActivity
     static final int SELECT_IMAGE = 1;
     static final int SELECT_DATE = 2;
     static final int ADD_NOTE = 3;
+    static final int INSTAGRAM = 4;
 
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
 
@@ -84,6 +95,7 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private String mPhotoUrl;
+    private InstagramEngine instagramEngine;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,27 +103,10 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = initializeToolbar();
 
-        //Javascript that https://developers.facebook.com/docs/plugins/embedded-posts said was necessary
-        //It is not necessary when clicking "embed" on a post but it might be needed
-        //if we change the way we embed pictures to use the Graph API
-//        WebView init = (WebView) findViewById(R.id.init_js);
-//        String initData = "<div id=\"fb-root\"></div>\n" +
-//                "<script>(function(d, s, id) {\n" +
-//                "  var js, fjs = d.getElementsByTagName(s)[0];\n" +
-//                "  if (d.getElementById(id)) return;\n" +
-//                "  js = d.createElement(s); js.id = id;\n" +
-//                "  js.src = \"//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.8&appId=121029951766180\";\n" +
-//                "  fjs.parentNode.insertBefore(js, fjs);\n" +
-//                "}(document, 'script', 'facebook-jssdk'));</script>";
-//        init.loadData(initData, "text/html", null);
-
-        //Funny post about stress
-//        WebView firstPost = (WebView) findViewById(R.id.post1);
-//        String data = "<iframe src=\"https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FStudentProblems%2Fposts%2F1184336055026459%3A0&width=500\" width=\"500\" height=\"589\" style=\"border:none;overflow:hidden\" scrolling=\"no\" frameborder=\"0\" allowTransparency=\"true\"></iframe>";
-//        firstPost.loadDataWithBaseURL("https://www.facebook.com/", data, "text/html", "utf-8", null);
-
         initializeDrawer(toolbar);
         initializeNavigationView();
+
+        PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
@@ -121,12 +116,18 @@ public class MainActivity extends AppCompatActivity
             if (mFirebaseUser.getPhotoUrl() != null) {
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
-            posts = getFacebookPosts();
+
+            posts = new ArrayList<>();
             attachPostListeners();
             onBoarding();
 
             setUpRecyclerView();
         }
+    }
+
+    private boolean isUsingInstagram() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean("connect_to_instagram", false);
     }
 
     private Toolbar initializeToolbar() {
@@ -168,23 +169,48 @@ public class MainActivity extends AppCompatActivity
 
     private void syncUserProfiles() {
         String uid = mFirebaseUser.getUid();
-        DatabaseReference users = mDatabase.getReference("/users");
-        users.child(uid).child("email").setValue(mFirebaseUser.getEmail());
-        users.child(uid).child("name").setValue(mFirebaseUser.getDisplayName());
+        final DatabaseReference user = mDatabase.getReference("/users").child(uid);
+        user.child("email").setValue(mFirebaseUser.getEmail());
+        user.child("name").setValue(mFirebaseUser.getDisplayName());
         for (UserInfo userInfo : mFirebaseUser.getProviderData()) {
             if (!userInfo.getProviderId().equals("firebase")) {
-                users.child(uid).child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
+                user.child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
             }
+        }
+        if (isUsingInstagram()) {
+            if (instagramEngine == null) {
+                setupInstagram();
+            }
+            instagramEngine.getUserDetails(new InstagramUserIdCallback(user));
+        }
+    }
+
+    private class InstagramUserIdCallback implements InstagramAPIResponseCallback<IGUser> {
+        private DatabaseReference user;
+
+        InstagramUserIdCallback(DatabaseReference user) {
+            this.user = user;
+        }
+
+        @Override
+        public void onResponse(IGUser responseObject, IGPagInfo pageInfo) {
+            String instagramId = responseObject.getId();
+            user.child("instagram").setValue(instagramId);
+        }
+
+        @Override
+        public void onFailure(InstagramException exception) {
+            Log.w("MainActivity", "Exception:" + exception.getMessage());
         }
     }
 
     private void onBoarding() {
         final String uid = mFirebaseUser.getUid();
-        mDatabase.getReference("/users").child(uid).child("onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase.getReference("/users").child(uid).child("facebook_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.exists()) {
-                    importExistingPosts(uid);
+                    importExistingFacebookPosts(uid);
                 }
             }
 
@@ -193,24 +219,43 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+        if (isUsingInstagram()) {
+            mDatabase.getReference("/users").child(uid).child("instagram_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        importExistingInstagramPosts(uid);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
 
     }
 
-    private void importExistingPosts(final String uid) {
+    private void importExistingInstagramPosts(final String uid) {
+        instagramEngine.getMediaForUser(new ImportExistingInstagramPostsCallback(uid));
+    }
+
+    private void importExistingFacebookPosts(final String uid) {
         /* make the API call */
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
                 "/me/feed?fields=id,created_time,message,story,full_picture,type",
                 null,
                 HttpMethod.GET,
-                new ImportExistingPostsCallback(uid)
+                new ImportExistingFacebookPostsCallback(uid)
         ).executeAsync();
     }
 
-    private class ImportExistingPostsCallback implements GraphRequest.Callback {
+    private class ImportExistingFacebookPostsCallback implements GraphRequest.Callback {
         private String uid;
 
-        ImportExistingPostsCallback(String uid) {
+        ImportExistingFacebookPostsCallback(String uid) {
             this.uid = uid;
         }
 
@@ -227,7 +272,7 @@ public class MainActivity extends AppCompatActivity
                         FacebookPost post = getFacebookPostFromRow(row);
                         mDatabase.getReference("/posts").child(uid).child("facebook_posts").push().setValue(post);
                     }
-                    mDatabase.getReference("/users").child(uid).child("onboarding").setValue(true);
+                    mDatabase.getReference("/users").child(uid).child("facebook_onboarding").setValue(true);
                 } else {
                     throw new Exception("This app needs access to posts, and isn't getting them");
                 }
@@ -275,6 +320,26 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private class ImportExistingInstagramPostsCallback implements InstagramAPIResponseCallback<ArrayList<IGMedia>> {
+        private String uid;
+
+        public ImportExistingInstagramPostsCallback(String uid) {
+            this.uid = uid;
+        }
+
+        @Override
+        public void onResponse(ArrayList<IGMedia> responseObject, IGPagInfo pageInfo) {
+            for (IGMedia media : responseObject) {
+                IGMedia temp = media;
+            }
+        }
+
+        @Override
+        public void onFailure(InstagramException exception) {
+
+        }
+    }
+
     private Date getFacebookDate(String createdTime) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
         return dateFormat.parse(createdTime);
@@ -285,13 +350,12 @@ public class MainActivity extends AppCompatActivity
      *
      * @return List of Strings. Strings represent each post.
      */
-    private List<Post> getFacebookPosts() {
+    /*private List<Post> getFacebookPosts() {
         List<Post> listOfPosts = new ArrayList<>();
 //        Posts.add(post5);
 
         return listOfPosts;
-    }
-
+    }*/
     private Date getDate(int year, int month, int day) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month, day);
@@ -358,6 +422,9 @@ public class MainActivity extends AppCompatActivity
                 // Log the user out and send them to log in
                 logOut();
                 break;
+            case R.id.instagram_action:
+                setupInstagram();
+                break;
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -365,9 +432,26 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void setupInstagram() {
+        instagramEngine = InstagramEngine.getInstance(MainActivity.this);
+
+        String[] scopes = {InstagramKitLoginScope.BASIC, InstagramKitLoginScope.COMMENTS};
+
+        Intent intent = new Intent(this, InstagramAuthActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        intent.putExtra(InstagramEngine.TYPE, InstagramEngine.TYPE_LOGIN);
+        //add scopes if you want to have more than basic access
+        intent.putExtra(InstagramEngine.SCOPE, scopes);
+
+        startActivityForResult(intent, INSTAGRAM);
+    }
+
     private void logOut() {
         mFirebaseAuth.signOut();
         Log.d(TAG, "Logging Out");
+        instagramEngine.logout(MainActivity.this, 0);
         Intent home = new Intent(this, LoginActivity.class);
         startActivity(home);
     }
@@ -410,6 +494,48 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
                 break;
+            case INSTAGRAM:
+                if (resultCode == RESULT_OK) {
+
+                    Bundle bundle = data.getExtras();
+
+                    if (bundle.containsKey(InstagramKitConstants.kSessionKey)) {
+
+                        IGSession session = (IGSession) bundle.getSerializable(InstagramKitConstants.kSessionKey);
+
+                        Toast.makeText(MainActivity.this, "Woohooo!!! User trusts you :) " + session.getAccessToken(),
+                                Toast.LENGTH_LONG).show();
+
+                        instagramEngine.getUserDetails(new InstagramAPIResponseCallback<IGUser>() {
+                            @Override
+                            public void onResponse(IGUser responseObject, IGPagInfo pageInfo) {
+
+                                Toast.makeText(MainActivity.this, "Username: " + responseObject.getUsername(),
+                                        Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onFailure(InstagramException exception) {
+                                Log.v("SampleActivity", "Exception:" + exception.getMessage());
+                            }
+                        });
+
+                        instagramEngine.getMediaForUser(new InstagramAPIResponseCallback<ArrayList<IGMedia>>() {
+                            @Override
+                            public void onResponse(ArrayList<IGMedia> responseObject, IGPagInfo pageInfo) {
+                                Toast.makeText(MainActivity.this, "Size: " + responseObject.size(),
+                                        Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onFailure(InstagramException exception) {
+                                Log.v("MainActivity", "Exception:" + exception.getMessage());
+                            }
+                        });
+                    }
+
+                }
+                break;
         }
     }
 
@@ -417,8 +543,12 @@ public class MainActivity extends AppCompatActivity
         final String uid = mFirebaseUser.getUid();
         NotePost post = new NotePost(uid, new Date(), noteTitle, newNote);
         mDatabase.getReference("/posts/" + uid + "/notes").push().setValue(post);
-        Toast.makeText(getApplicationContext(), "Adding Note", Toast.LENGTH_LONG).show();
+        toast("Adding Note");
         Log.d(TAG, "Note is " + post.toString());
+    }
+
+    private void toast(String toast) {
+        Toast.makeText(getApplicationContext(), toast, Toast.LENGTH_LONG).show();
     }
 
     private void addNewImage(Intent data) {
@@ -527,13 +657,11 @@ public class MainActivity extends AppCompatActivity
     private int getIndexOfClosestPost(Date wantedDate) {
         double closestDistance = Double.MAX_VALUE;
         int closestIndex = -1;
-        for (int i = 0; i < posts.size(); ++i)
-        {
+        for (int i = 0; i < posts.size(); ++i) {
             Post post = posts.get(i);
             Date date = post.date;
             double distance = Math.abs(date.getTime() - wantedDate.getTime());
-            if (distance < closestDistance)
-            {
+            if (distance < closestDistance) {
                 closestDistance = distance;
                 closestIndex = i;
             }
@@ -541,20 +669,12 @@ public class MainActivity extends AppCompatActivity
         return closestIndex;
     }
 
-    private String generateFacebookPostHTML(String userId, String postId) throws UnsupportedEncodingException {
-        //String iframeFront = String.format("<iframe src=\"https://www.facebook.com/plugins/post.php?href=%s", generateFacebookPostUrl(userId, postId), );
-        return "https://www.facebook.com/" + userId + "/posts/" + postId;
-    }
-
-    private String generateFacebookPostUrl(String userId, String postId) throws UnsupportedEncodingException {
-        return URLEncoder.encode("https://www.facebook.com/" + userId + "/posts/" + postId, "UTF-8");
-    }
-
     public void attachPostListeners() {
         final String uid = mFirebaseUser.getUid();
         mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
         mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
         mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
+        //mDatabase.getReference("posts/" + uid + "/instagram_posts").addChildEventListener(new InstagramChildEventListener());
     }
 
     private abstract class BaseChildEventListener implements ChildEventListener {
@@ -620,6 +740,14 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
             return dataSnapshot.getValue(NotePost.class);
+        }
+    }
+
+    private class InstagramChildEventListener extends BaseChildEventListener {
+        @Override
+        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
+            // TODO create InstagramPost class
+            return dataSnapshot.getValue(FacebookPost.class);
         }
     }
 }

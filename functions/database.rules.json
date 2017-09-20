@@ -1,10 +1,7 @@
+// These rules require authentication
 {
   "rules": {
-    "instagramAccessToken": {
-      "$uid": {
-        ".read": "auth.uid === $uid",
-        ".write": "auth.uid === $uid"
-      }
-    }
+    ".read": "auth != null",
+    ".write": "auth != null"
   }
 }

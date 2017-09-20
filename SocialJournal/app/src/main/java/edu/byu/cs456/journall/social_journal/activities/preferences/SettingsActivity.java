@@ -52,8 +52,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 int index = listPreference.findIndexOfValue(stringValue);
 
                 // Set the summary to reflect the new value.
-                preference.setSummary(
-                        index >= 0 ? listPreference.getEntries()[index] : null);
+                preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
             } else if (preference instanceof RingtonePreference) {
                 // For ringtone preferences, look up the correct display value
