@@ -206,7 +206,8 @@ public class MainActivity extends AppCompatActivity
 
     private void onBoarding() {
         final String uid = mFirebaseUser.getUid();
-        mDatabase.getReference("/users").child(uid).child("facebook_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference user = mDatabase.getReference("/users").child(uid);
+        user.child("facebook_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.exists()) {
@@ -220,25 +221,36 @@ public class MainActivity extends AppCompatActivity
             }
         });
         if (isUsingInstagram()) {
-            mDatabase.getReference("/users").child(uid).child("instagram_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (!dataSnapshot.exists()) {
-                        importExistingInstagramPosts(uid);
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
+            Log.d(TAG, "Here");
+//            user.child("instagram_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot dataSnapshot) {
+//                    if (!dataSnapshot.exists()) {
+//
+//                    }
+//                }
+//
+//                @Override
+//                public void onCancelled(DatabaseError databaseError) {
+//
+//                }
+//            });
+//            mDatabase.getReference("/users").child(uid).child("instagram_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot dataSnapshot) {
+//                    if (!dataSnapshot.exists()) {
+//                        Log.d(TAG, "Here");
+//                        //instagramEngine.getMediaForUser(new ImportExistingInstagramPostsCallback(uid));
+//                    }
+//                }
+//
+//                @Override
+//                public void onCancelled(DatabaseError databaseError) {
+//
+//                }
+//            });
         }
 
-    }
-
-    private void importExistingInstagramPosts(final String uid) {
-        instagramEngine.getMediaForUser(new ImportExistingInstagramPostsCallback(uid));
     }
 
     private void importExistingFacebookPosts(final String uid) {
@@ -744,6 +756,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private class InstagramChildEventListener extends BaseChildEventListener {
+
         @Override
         protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
             // TODO create InstagramPost class
