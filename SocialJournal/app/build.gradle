@@ -22,6 +22,7 @@ android {
 repositories {
     mavenCentral()
     maven { url 'https://dl.bintray.com/sayyam/maven' }
+    jcenter()
 }
 
 dependencies {
@@ -43,8 +44,11 @@ dependencies {
     /*compile 'com.google.firebase:firebase-admin:5.3.0'*/
     compile 'com.facebook.android:facebook-android-sdk:4.21.0'
     compile 'com.github.bumptech.glide:glide:3.7.0'
+
     compile 'com.github.sayyam:instagramapi:0.1.0'
 
+    // Include all the Twitter APIs
+    compile 'com.twitter.sdk.android:twitter:3.1.1'
 
     testCompile 'junit:junit:4.12'
 }

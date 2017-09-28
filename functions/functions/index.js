@@ -175,6 +175,6 @@ exports.bigben = functions.https.onRequest((req, res) => {
 		</html>`);
 });
 
-/*exports.redirect = functions.https.onRequest((req, res) => {
+exports.callback = functions.https.onRequest((req, res) => {
 	res.status(200).redirect('socialjournal://redirect');
-});*/
+});

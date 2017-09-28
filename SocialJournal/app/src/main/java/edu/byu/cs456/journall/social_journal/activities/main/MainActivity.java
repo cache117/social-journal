@@ -25,6 +25,7 @@ import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
+import com.facebook.login.LoginManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -106,8 +107,6 @@ public class MainActivity extends AppCompatActivity
         initializeDrawer(toolbar);
         initializeNavigationView();
 
-        PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
-
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser != null) {
@@ -172,6 +171,7 @@ public class MainActivity extends AppCompatActivity
         final DatabaseReference user = mDatabase.getReference("/users").child(uid);
         user.child("email").setValue(mFirebaseUser.getEmail());
         user.child("name").setValue(mFirebaseUser.getDisplayName());
+        setDisplayName(mFirebaseUser.getDisplayName());
         for (UserInfo userInfo : mFirebaseUser.getProviderData()) {
             if (!userInfo.getProviderId().equals("firebase")) {
                 user.child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
@@ -183,6 +183,12 @@ public class MainActivity extends AppCompatActivity
             }
             instagramEngine.getUserDetails(new InstagramUserIdCallback(user));
         }
+    }
+
+    private void setDisplayName(String displayName) {
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putString("pref_display_name", displayName);
+        editor.apply();
     }
 
     private class InstagramUserIdCallback implements InstagramAPIResponseCallback<IGUser> {
@@ -291,6 +297,7 @@ public class MainActivity extends AppCompatActivity
 
             } catch (Exception e) {
                 Toast.makeText(getApplicationContext(), "Something went wrong with importing your existing posts", Toast.LENGTH_SHORT).show();
+                Log.w(TAG, e);
             }
         }
 
@@ -462,8 +469,11 @@ public class MainActivity extends AppCompatActivity
 
     private void logOut() {
         mFirebaseAuth.signOut();
+        LoginManager.getInstance().logOut();
         Log.d(TAG, "Logging Out");
-        instagramEngine.logout(MainActivity.this, 0);
+        if (instagramEngine != null) {
+            instagramEngine.logout(MainActivity.this, 0);
+        }
         Intent home = new Intent(this, LoginActivity.class);
         startActivity(home);
     }

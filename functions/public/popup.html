@@ -53,7 +53,7 @@ Please wait...
   function tokenReceived(data) {
     if (data.token) {
       firebase.auth().signInWithCustomToken(data.token).then(function() {
-        window.close();
+        // window.close();
       });
     } else {
       console.error(data);
