@@ -25,13 +25,21 @@ import com.google.firebase.storage.StorageReference;
 import java.util.List;
 
 import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
 import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
 import edu.byu.cs456.journall.social_journal.models.post.ImagePost;
 import edu.byu.cs456.journall.social_journal.models.post.NotePost;
 import edu.byu.cs456.journall.social_journal.models.post.Post;
+import edu.byu.cs456.journall.social_journal.models.post.TwitterPost;
 import edu.byu.cs456.journall.social_journal.models.post.WebPost;
 
 import com.bumptech.glide.Glide;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.tweetui.TweetUtils;
+import com.twitter.sdk.android.tweetui.TweetView;
 
 /**
  * Created by Michael on 3/27/2017.
@@ -42,6 +50,7 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     private final static int TEXT_POST = 1;
     private final static int IMAGE_POST = 2;
     private final static int FACEBOOK_POST = 3;
+    private final static int TWITTER_POST = 4;
 
     private List<Post> mDataset;
     private Context mContext;
@@ -124,9 +133,17 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         }
     }
 
+    public static class TwitterViewHolder extends SocialJournalAdapter.ViewHolder {
+        public TweetView mTweetView;
+        public TwitterViewHolder(View v) {
+            super(v);
+            mTweetView = (TweetView) v.findViewById(R.id.tweet_view);
+        }
+    }
+
     // Provide a suitable constructor (depends on the kind of dataset)
     public SocialJournalAdapter(List<Post> myDataset, Context context) {
-
+        this();
         mDataset = myDataset;
         mContext = context;
     }
@@ -151,6 +168,10 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
                 View facebookView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.facebook_post, parent, false);
                 return new FacebookViewHolder(facebookView);
+            case TWITTER_POST:
+                View tweetView = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.twitter_post, parent, false);
+                return new TwitterViewHolder(tweetView);
             default:
                 return null;
         }
@@ -180,7 +201,27 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
             //Facebook post
             case FACEBOOK_POST:
                 handleFacebookPost(holder, post);
+                break;
+            case TWITTER_POST:
+                handleTweet(holder, post);
+                break;
         }
+    }
+
+    private void handleTweet(ViewHolder holder, Post post) {
+        final TwitterViewHolder twitterViewHolder = (TwitterViewHolder) holder;
+        TwitterPost twitterPost = (TwitterPost) post;
+        TweetUtils.loadTweet(twitterPost.tweet.id, new Callback<Tweet>() {
+            @Override
+            public void success(Result<Tweet> result) {
+                twitterViewHolder.mTweetView = new TweetView(mContext, result.data);
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                Log.d(TAG, "Failed to handle tweet properly in adapter");
+            }
+        });
     }
 
     private void handleFacebookPost(ViewHolder holder, Post post) {
@@ -261,6 +302,8 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
             return WEB_POST;
         } else if (item instanceof FacebookPost) {
             return FACEBOOK_POST;
+        } else if (item instanceof TwitterPost) {
+            return TWITTER_POST;
         } else if (item instanceof ImagePost) {
             return IMAGE_POST;
         } else {

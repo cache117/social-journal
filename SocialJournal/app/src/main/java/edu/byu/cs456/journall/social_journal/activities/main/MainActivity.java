@@ -40,16 +40,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.instagram.instagramapi.activities.InstagramAuthActivity;
 import com.instagram.instagramapi.engine.InstagramEngine;
-import com.instagram.instagramapi.engine.InstagramKitConstants;
 import com.instagram.instagramapi.exceptions.InstagramException;
 import com.instagram.instagramapi.interfaces.InstagramAPIResponseCallback;
-import com.instagram.instagramapi.objects.IGMedia;
 import com.instagram.instagramapi.objects.IGPagInfo;
-import com.instagram.instagramapi.objects.IGSession;
 import com.instagram.instagramapi.objects.IGUser;
-import com.instagram.instagramapi.utils.InstagramKitLoginScope;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
@@ -58,7 +53,6 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
 import com.twitter.sdk.android.core.services.StatusesService;
-import com.twitter.sdk.android.tweetui.SearchTimeline;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -199,12 +193,12 @@ public class MainActivity extends AppCompatActivity
                 user.child(userInfo.getProviderId().split("\\.")[0]).setValue(userInfo.getUid());
             }
         }
-        if (isUsingInstagram()) {
-            if (instagramEngine == null) {
-                setupInstagram();
-            }
-            instagramEngine.getUserDetails(new InstagramUserIdCallback(user));
-        }
+//        if (isUsingInstagram()) {
+//            if (instagramEngine == null) {
+//                setupInstagram();
+//            }
+//            instagramEngine.getUserDetails(new InstagramUserIdCallback(user));
+//        }
     }
 
     private void setDisplayName(String displayName) {
@@ -307,11 +301,17 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void success(Result<List<Tweet>> result) {
             Log.d(TAG, "Importing Twitter");
-            for (Tweet tweet : result.data) {
-                mDatabase.getReference("/posts").child(uid).child("tweets").push().setValue(tweet);
-            }
+            try {
+                for (Tweet tweet : result.data) {
+                    TwitterPost post = new TwitterPost(uid, getDateFromTweet(tweet), tweet);
+                    mDatabase.getReference("/posts").child(uid).child("tweets").push().setValue(post);
+                }
 
-            mDatabase.getReference("/users").child(uid).child("twitter_onboarding").setValue(true);
+                mDatabase.getReference("/users").child(uid).child("twitter_onboarding").setValue(true);
+            } catch (ParseException e) {
+                Toast.makeText(getApplicationContext(), "Something went wrong with importing your existing posts", Toast.LENGTH_SHORT).show();
+                Log.w(TAG, e);
+            }
         }
 
         @Override
@@ -319,8 +319,6 @@ public class MainActivity extends AppCompatActivity
             Log.w(TAG, exception);
         }
     }
-
-
 
     private void importExistingFacebookPosts(final String uid) {
         /* make the API call */
@@ -355,7 +353,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     mDatabase.getReference("/users").child(uid).child("facebook_onboarding").setValue(true);
                 } else {
-                    throw new Exception("This app needs access to posts, and isn't getting them");
+                    throw new Exception("This app needs access to facebook posts, and isn't getting them");
                 }
 
             } catch (Exception e) {
@@ -402,7 +400,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private class ImportExistingInstagramPostsCallback implements InstagramAPIResponseCallback<ArrayList<IGMedia>> {
+    /*private class ImportExistingInstagramPostsCallback implements InstagramAPIResponseCallback<ArrayList<IGMedia>> {
         private String uid;
 
         public ImportExistingInstagramPostsCallback(String uid) {
@@ -420,11 +418,19 @@ public class MainActivity extends AppCompatActivity
         public void onFailure(InstagramException exception) {
 
         }
-    }
+    }*/
 
     private Date getFacebookDate(String createdTime) throws ParseException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+        final String FACEBOOK_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+        SimpleDateFormat dateFormat = new SimpleDateFormat(FACEBOOK_DATE_FORMAT, Locale.ENGLISH);
         return dateFormat.parse(createdTime);
+    }
+
+    private static Date getDateFromTweet(Tweet tweet) throws ParseException {
+        // e.g. Sat Sep 16 17:54:56 +0000 2017
+        final String TWITTER_DATE_FORMAT = "EEE MMM dd HH:mm:ss ZZZZZ yyyy";
+        SimpleDateFormat dateFormat = new SimpleDateFormat(TWITTER_DATE_FORMAT, Locale.ENGLISH);
+        return dateFormat.parse(tweet.createdAt);
     }
 
     /**
@@ -504,9 +510,9 @@ public class MainActivity extends AppCompatActivity
                 // Log the user out and send them to log in
                 logOut();
                 break;
-            case R.id.instagram_action:
-                setupInstagram();
-                break;
+//            case R.id.instagram_action:
+//                setupInstagram();
+//                break;
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -514,7 +520,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void setupInstagram() {
+    /*private void setupInstagram() {
         instagramEngine = InstagramEngine.getInstance(MainActivity.this);
 
         String[] scopes = {InstagramKitLoginScope.BASIC, InstagramKitLoginScope.COMMENTS};
@@ -528,14 +534,14 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(InstagramEngine.SCOPE, scopes);
 
         startActivityForResult(intent, INSTAGRAM);
-    }
+    }*/
 
     private void logOut() {
+        Log.d(TAG, "Logging Out");
         mFirebaseAuth.signOut();
         if (isUsingFacebook()) {
             LoginManager.getInstance().logOut();
         }
-        Log.d(TAG, "Logging Out");
 //        if (isUsingInstagram() && instagramEngine != null) {
 //            instagramEngine.logout(MainActivity.this, 0);
 //        }
@@ -584,7 +590,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
                 break;
-            case INSTAGRAM:
+            /*case INSTAGRAM:
                 if (resultCode == RESULT_OK) {
 
                     Bundle bundle = data.getExtras();
@@ -625,7 +631,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                 }
-                break;
+                break;*/
         }
     }
 
@@ -765,6 +771,7 @@ public class MainActivity extends AppCompatActivity
         mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
         mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
         //mDatabase.getReference("posts/" + uid + "/instagram_posts").addChildEventListener(new InstagramChildEventListener());
+        mDatabase.getReference("posts/" + uid + "tweets").addChildEventListener(new TwitterChildEventListener());
     }
 
     private abstract class BaseChildEventListener implements ChildEventListener {
@@ -833,12 +840,20 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private class InstagramChildEventListener extends BaseChildEventListener {
+//    private class InstagramChildEventListener extends BaseChildEventListener {
+//
+//        @Override
+//        protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
+//            // TODO create InstagramPost class
+//            return dataSnapshot.getValue(FacebookPost.class);
+//        }
+//    }
+
+    private class TwitterChildEventListener extends BaseChildEventListener {
 
         @Override
         protected Post getPostFromDataSnapshot(DataSnapshot dataSnapshot) {
-            // TODO create InstagramPost class
-            return dataSnapshot.getValue(FacebookPost.class);
+            return dataSnapshot.getValue(TwitterPost.class);
         }
     }
 }

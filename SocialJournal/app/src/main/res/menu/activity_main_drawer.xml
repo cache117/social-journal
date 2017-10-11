@@ -25,11 +25,11 @@
         android:icon="@drawable/ic_settings_applications_black_24dp"
         android:title="@string/launch_settings_text" />
 
-    <item
-        android:id="@+id/instagram_action"
-        android:title="Set up Instagram"
-        android:icon="@drawable/ic_settings_applications_black_24dp"
-        />
+    <!--<item-->
+        <!--android:id="@+id/instagram_action"-->
+        <!--android:title="Set up Instagram"-->
+        <!--android:icon="@drawable/ic_settings_applications_black_24dp"-->
+        <!--/>-->
 
     <item
         android:id="@+id/nav_log_out"
