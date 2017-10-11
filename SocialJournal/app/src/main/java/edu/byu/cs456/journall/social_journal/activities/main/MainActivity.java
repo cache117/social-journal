@@ -303,7 +303,7 @@ public class MainActivity extends AppCompatActivity
             Log.d(TAG, "Importing Twitter");
             try {
                 for (Tweet tweet : result.data) {
-                    TwitterPost post = new TwitterPost(uid, getDateFromTweet(tweet), tweet);
+                    TwitterPost post = new TwitterPost(uid, getDateFromTweet(tweet), tweet.id);
                     mDatabase.getReference("/posts").child(uid).child("tweets").push().setValue(post);
                 }
 
@@ -771,7 +771,7 @@ public class MainActivity extends AppCompatActivity
         mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());
         mDatabase.getReference("posts/" + uid + "/notes").addChildEventListener(new NoteChildEventListener());
         //mDatabase.getReference("posts/" + uid + "/instagram_posts").addChildEventListener(new InstagramChildEventListener());
-        mDatabase.getReference("posts/" + uid + "tweets").addChildEventListener(new TwitterChildEventListener());
+        mDatabase.getReference("posts/" + uid + "/tweets").addChildEventListener(new TwitterChildEventListener());
     }
 
     private abstract class BaseChildEventListener implements ChildEventListener {

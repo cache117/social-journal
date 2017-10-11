@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Display;
@@ -38,6 +39,7 @@ import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.tweetui.CompactTweetView;
 import com.twitter.sdk.android.tweetui.TweetUtils;
 import com.twitter.sdk.android.tweetui.TweetView;
 
@@ -134,10 +136,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     }
 
     public static class TwitterViewHolder extends SocialJournalAdapter.ViewHolder {
-        public TweetView mTweetView;
+//        public TweetView mTweetView;
+        public CardView mCardView;
         public TwitterViewHolder(View v) {
             super(v);
-            mTweetView = (TweetView) v.findViewById(R.id.tweet_view);
+//            mTweetView = (TweetView) v.findViewById(R.id.tweet_view);
+            mCardView = (CardView) v.findViewById(R.id.twitter_card_view);
         }
     }
 
@@ -211,10 +215,11 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     private void handleTweet(ViewHolder holder, Post post) {
         final TwitterViewHolder twitterViewHolder = (TwitterViewHolder) holder;
         TwitterPost twitterPost = (TwitterPost) post;
-        TweetUtils.loadTweet(twitterPost.tweet.id, new Callback<Tweet>() {
+        TweetUtils.loadTweet(twitterPost.tweetId, new Callback<Tweet>() {
             @Override
             public void success(Result<Tweet> result) {
-                twitterViewHolder.mTweetView = new TweetView(mContext, result.data);
+                //Unlike the other posts, we have to add a delivered TweetView to the card view.
+                twitterViewHolder.mCardView.addView(new CompactTweetView(mContext, result.data));
             }
 
             @Override
