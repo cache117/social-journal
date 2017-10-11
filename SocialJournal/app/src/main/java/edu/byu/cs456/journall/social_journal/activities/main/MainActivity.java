@@ -50,6 +50,15 @@ import com.instagram.instagramapi.objects.IGPagInfo;
 import com.instagram.instagramapi.objects.IGSession;
 import com.instagram.instagramapi.objects.IGUser;
 import com.instagram.instagramapi.utils.InstagramKitLoginScope;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterApiClient;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.services.StatusesService;
+import com.twitter.sdk.android.tweetui.SearchTimeline;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,6 +78,7 @@ import edu.byu.cs456.journall.social_journal.activities.login.LoginActivity;
 import edu.byu.cs456.journall.social_journal.activities.note.AddNote;
 import edu.byu.cs456.journall.social_journal.activities.calendar.JournalCalendar;
 import edu.byu.cs456.journall.social_journal.activities.preferences.SettingsActivity;
+import edu.byu.cs456.journall.social_journal.models.post.TwitterPost;
 import edu.byu.cs456.journall.social_journal.views.SocialJournalAdapter;
 import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
 import edu.byu.cs456.journall.social_journal.models.post.ImagePost;
@@ -107,6 +117,8 @@ public class MainActivity extends AppCompatActivity
         initializeDrawer(toolbar);
         initializeNavigationView();
 
+        Twitter.initialize(this);
+
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser != null) {
@@ -127,6 +139,16 @@ public class MainActivity extends AppCompatActivity
     private boolean isUsingInstagram() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         return sharedPref.getBoolean("connect_to_instagram", false);
+    }
+
+    private boolean isUsingFacebook() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean("connect_to_facebook", false);
+    }
+
+    private boolean isUsingTwitter() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean("connect_to_twitter", false);
     }
 
     private Toolbar initializeToolbar() {
@@ -213,21 +235,39 @@ public class MainActivity extends AppCompatActivity
     private void onBoarding() {
         final String uid = mFirebaseUser.getUid();
         DatabaseReference user = mDatabase.getReference("/users").child(uid);
-        user.child("facebook_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (!dataSnapshot.exists()) {
-                    importExistingFacebookPosts(uid);
+        if (isUsingFacebook()) {
+            user.child("facebook_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        importExistingFacebookPosts(uid);
+                    }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
-        if (isUsingInstagram()) {
-            Log.d(TAG, "Here");
+                }
+            });
+        }
+        if (isUsingTwitter()) {
+            user.child("twitter_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        Log.d(TAG, "Importing Twitter");
+                        importExistingTwitterPosts(uid);
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
+//        if (isUsingInstagram()) {
+//            Log.d(TAG, "Here");
 //            user.child("instagram_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
 //                @Override
 //                public void onDataChange(DataSnapshot dataSnapshot) {
@@ -241,23 +281,46 @@ public class MainActivity extends AppCompatActivity
 //
 //                }
 //            });
-//            mDatabase.getReference("/users").child(uid).child("instagram_onboarding").addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    if (!dataSnapshot.exists()) {
-//                        Log.d(TAG, "Here");
-//                        //instagramEngine.getMediaForUser(new ImportExistingInstagramPostsCallback(uid));
-//                    }
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            });
+//        }
+    }
+
+    private void importExistingTwitterPosts(final String uid) {
+        TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
+        StatusesService statusesService = twitterApiClient.getStatusesService();
+        statusesService
+                .userTimeline(TwitterCore
+                                .getInstance()
+                                .getSessionManager()
+                                .getActiveSession()
+                                .getUserId(),
+                        null, null, null, null, null, null, null, null)
+                .enqueue(new ImportExistingTwitterPostsCallback(uid));
+    }
+
+    private class ImportExistingTwitterPostsCallback extends Callback<List<Tweet>> {
+        private String uid;
+
+        ImportExistingTwitterPostsCallback(String uid) {
+            this.uid = uid;
         }
 
+        @Override
+        public void success(Result<List<Tweet>> result) {
+            Log.d(TAG, "Importing Twitter");
+            for (Tweet tweet : result.data) {
+                mDatabase.getReference("/posts").child(uid).child("tweets").push().setValue(tweet);
+            }
+
+            mDatabase.getReference("/users").child(uid).child("twitter_onboarding").setValue(true);
+        }
+
+        @Override
+        public void failure(TwitterException exception) {
+            Log.w(TAG, exception);
+        }
     }
+
+
 
     private void importExistingFacebookPosts(final String uid) {
         /* make the API call */
@@ -469,10 +532,15 @@ public class MainActivity extends AppCompatActivity
 
     private void logOut() {
         mFirebaseAuth.signOut();
-        LoginManager.getInstance().logOut();
+        if (isUsingFacebook()) {
+            LoginManager.getInstance().logOut();
+        }
         Log.d(TAG, "Logging Out");
-        if (instagramEngine != null) {
-            instagramEngine.logout(MainActivity.this, 0);
+//        if (isUsingInstagram() && instagramEngine != null) {
+//            instagramEngine.logout(MainActivity.this, 0);
+//        }
+        if (isUsingTwitter()) {
+            TwitterCore.getInstance().getSessionManager().clearActiveSession();
         }
         Intent home = new Intent(this, LoginActivity.class);
         startActivity(home);

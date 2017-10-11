@@ -41,20 +41,21 @@ import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
  * @author Cache Staheli
  */
 public class LoginActivity extends AppCompatActivity {
+    private static final String TAG = LoginActivity.class.getCanonicalName();
 
-    private static final String TAG = "Login";
     private CallbackManager mCallbackManager;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private TwitterLoginButton mLoginButton;
-    private SharedPreferences sharedPreferences;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Twitter.initialize(this);
+
         setContentView(R.layout.activity_login);
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.pref_data_sync, false);
+
         initializeFirebaseAuth();
         new FacebookAuthMethods().initializeFacebookLogin();
         new TwitterAuthMethods().initializeTwitterLogin();
@@ -77,7 +78,6 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
 //                    signOut();
                 }
-                // ...
             }
         };
     }
@@ -94,12 +94,6 @@ public class LoginActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
-    }
-
-    private void useSocialNetwork(String key) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(key, true);
-        editor.apply();
     }
 
     private class FacebookAuthMethods {
@@ -129,45 +123,17 @@ public class LoginActivity extends AppCompatActivity {
             });
         }
 
-        private class FacebookOnCompleteListener implements OnCompleteListener<AuthResult> {
-            private boolean linkToExisting;
-
-            public FacebookOnCompleteListener(boolean linkToExisting) {
-                this.linkToExisting = linkToExisting;
-            }
-
-            private String getTagText() {
-                if (linkToExisting) {
-                    return "linkWithCredential";
-                } else {
-                    return "signInWithCredential";
-                }
-            }
-
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                Log.d(TAG, getTagText() + ":onComplete:" + task.isSuccessful());
-
-                if (task.isSuccessful()) {
-                    Log.d(TAG, getTagText() + ":success");
-                    useSocialNetwork("connect_to_facebook");
-                } else {
-                    Log.d(TAG, getTagText() + ":failure");
-                }
-            }
-        }
-
         private void handleFacebookAccessToken(AccessToken token) {
             Log.d(TAG, "handleFacebookAccessToken:" + token);
 
             AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
             if (mAuth.getCurrentUser() == null) {
                 mAuth.signInWithCredential(credential)
-                        .addOnCompleteListener(LoginActivity.this, new FacebookOnCompleteListener(false));
+                        .addOnCompleteListener(LoginActivity.this, new LoginCallback(LoginActivity.this, false, "connect_to_facebook"));
             } else {
                 mAuth.getCurrentUser()
                         .linkWithCredential(credential)
-                        .addOnCompleteListener(LoginActivity.this, new FacebookOnCompleteListener(true));
+                        .addOnCompleteListener(LoginActivity.this, new LoginCallback(LoginActivity.this, true, "connect_to_facebook"));
             }
         }
     }
@@ -192,43 +158,15 @@ public class LoginActivity extends AppCompatActivity {
             });
         }
 
-        private class TwitterOnCompleteListener implements OnCompleteListener<AuthResult> {
-            private boolean linkToExisting;
-
-            public TwitterOnCompleteListener(boolean linkToExisting) {
-                this.linkToExisting = linkToExisting;
-            }
-
-            private String getTagText() {
-                if (linkToExisting) {
-                    return "linkWithCredential";
-                } else {
-                    return "signInWithCredential";
-                }
-            }
-
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                Log.d(TAG, getTagText() + ":onComplete:" + task.isSuccessful());
-
-                if (task.isSuccessful()) {
-                    Log.d(TAG, getTagText() + ":success");
-                    useSocialNetwork("connect_to_twitter");
-                } else {
-                    Log.d(TAG, getTagText() + ":failure");
-                }
-            }
-        }
-
         private void handleTwitterSession(TwitterSession session) {
             AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token, session.getAuthToken().secret);
             if (mAuth.getCurrentUser() == null) {
                 mAuth.signInWithCredential(credential)
-                        .addOnCompleteListener(LoginActivity.this, new TwitterOnCompleteListener(false));
+                        .addOnCompleteListener(LoginActivity.this, new LoginCallback(LoginActivity.this, false, "connect_to_twitter"));
             } else {
                 mAuth.getCurrentUser()
                         .linkWithCredential(credential)
-                        .addOnCompleteListener(LoginActivity.this,  new TwitterOnCompleteListener(true));
+                        .addOnCompleteListener(LoginActivity.this, new LoginCallback(LoginActivity.this, true, "connect_to_twitter"));
             }
         }
     }

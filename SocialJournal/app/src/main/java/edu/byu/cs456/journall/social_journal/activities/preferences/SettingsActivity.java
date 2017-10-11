@@ -4,6 +4,7 @@ package edu.byu.cs456.journall.social_journal.activities.preferences;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -13,16 +14,33 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
+
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.TwitterAuthProvider;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 
 import java.util.List;
 
 import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.login.LoginActivity;
+import edu.byu.cs456.journall.social_journal.activities.login.LoginCallback;
+import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -35,7 +53,16 @@ import edu.byu.cs456.journall.social_journal.R;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity {
+public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static final String TAG = SettingsActivity.class.getCanonicalName();
+
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    private TwitterAuthClient mTwitterAuthClient;
+
+    public static final String CONNECT_TO_FACEBOOK = "connect_to_facebook";
+    public static final String CONNECT_TO_TWITTER = "connect_to_twitter";
+    public static final String CONNECT_TO_INSTAGRAM = "connect_to_instagram";
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -54,28 +81,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 // Set the summary to reflect the new value.
                 preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
-            } else if (preference instanceof RingtonePreference) {
-                // For ringtone preferences, look up the correct display value
-                // using RingtoneManager.
-                if (TextUtils.isEmpty(stringValue)) {
-                    // Empty values correspond to 'silent' (no ringtone).
-                    preference.setSummary(R.string.pref_ringtone_silent);
-
-                } else {
-                    Ringtone ringtone = RingtoneManager.getRingtone(
-                            preference.getContext(), Uri.parse(stringValue));
-
-                    if (ringtone == null) {
-                        // Clear the summary if there was a lookup error.
-                        preference.setSummary(null);
-                    } else {
-                        // Set the summary to reflect the new ringtone display
-                        // name.
-                        String name = ringtone.getTitle(preference.getContext());
-                        preference.setSummary(name);
-                    }
-                }
-
             } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
@@ -84,6 +89,75 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return true;
         }
     };
+
+    private void initializeFirebaseAuth() {
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+//                    signOut();
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        mTwitterAuthClient.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        switch (key) {
+            case CONNECT_TO_FACEBOOK:
+                break;
+            case CONNECT_TO_TWITTER:
+                if (isUsingTwitter()) {
+                    mTwitterAuthClient.authorize(this, new Callback<TwitterSession>() {
+                        @Override
+                        public void success(Result<TwitterSession> result) {
+                            // Do something with result, which provides a TwitterSession for making API calls
+                            Log.d(TAG, "twitterLogin:success" + result);
+                            handleTwitterSession(result.data);
+                        }
+
+                        @Override
+                        public void failure(TwitterException exception) {
+                            Log.w(TAG, "twitterLogin:failure", exception);
+                        }
+                    });
+                }
+                else {
+                    TwitterCore.getInstance().getSessionManager().clearActiveSession();
+                }
+                break;
+            case CONNECT_TO_INSTAGRAM:
+                break;
+        }
+    }
+
+    private void handleTwitterSession(TwitterSession session) {
+        AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token, session.getAuthToken().secret);
+        if (mAuth.getCurrentUser() == null) {
+            mAuth.signInWithCredential(credential)
+                    .addOnCompleteListener(this, new LoginCallback(this, false, "connect_to_twitter"));
+        } else {
+            mAuth.getCurrentUser()
+                    .linkWithCredential(credential)
+                    .addOnCompleteListener(this, new LoginCallback(this, true, "connect_to_twitter"));
+        }
+    }
+
 
     /**
      * Helper method to determine if the device has an extra-large screen. For
@@ -119,6 +193,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        Twitter.initialize(this);
+        mTwitterAuthClient = new TwitterAuthClient();
+        initializeFirebaseAuth();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+
+    }
+
+    @Override
+    public void onPause() {
+        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
+        super.onPause();
     }
 
     /**
@@ -164,7 +254,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * activity is showing a two-pane settings UI.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
+    public static class GeneralPreferenceFragment extends PreferenceFragment{
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -211,5 +302,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    private boolean isUsingInstagram() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean("connect_to_instagram", false);
+    }
+
+    private boolean isUsingFacebook() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean("connect_to_facebook", false);
+    }
+
+    private boolean isUsingTwitter() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPref.getBoolean("connect_to_twitter", false);
     }
 }
