@@ -45,6 +45,11 @@ import edu.byu.cs456.journall.social_journal.models.post.WebPost;
  * @author Cache Staheli
  */
 public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdapter.ViewHolder> {
+
+    /**
+     * @deprecated This shouldn't really be used. This was a precursor for Facebook posts. Those now
+     * are implemented separately using the Facebook API.
+     */
     private final static int WEB_POST = 0;
     private final static int TEXT_POST = 1;
     private final static int IMAGE_POST = 2;
@@ -70,7 +75,10 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     }
 
     /**
-     * WebViewHolder is for Facebook posts and inserts an iframe into a WebView
+     * WebViewHolder is for Facebook posts and inserts an iframe into a WebView.
+     *
+     * @deprecated This shouldn't really be used. This was a precursor for Facebook posts. Those now
+     * are implemented separately using the Facebook API.
      */
     private static class WebViewHolder extends SocialJournalAdapter.ViewHolder {
         final WebView mWebView;
