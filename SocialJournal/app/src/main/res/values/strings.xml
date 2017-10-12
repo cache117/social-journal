@@ -110,10 +110,12 @@
     <string name="note_title_hint">Title</string>
     <string name="note_hint">Add your note here</string>
     <string name="authors">Michael Call &amp; Cache Staheli</string>
-    <string name="image_view_descr">Added image</string>
+    <string name="image_view_description">Added image</string>
     <string name="facebook_post_image">Facebook Post Image</string>
     <string name="post_profile_picture">Post Profile Picture</string>
     <string name="action_sign_in_with_instagram">Sign In With Instagram</string>
     <string name="login_error">Error logging into Instagram</string>
     <string name="log_out_text">Log Out</string>
+    <string name="app_image_description">Image of App</string>
+    <string name="splash_icon">Splash Icon</string>
 </resources>

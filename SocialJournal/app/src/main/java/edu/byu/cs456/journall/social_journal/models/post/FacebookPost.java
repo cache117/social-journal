@@ -12,6 +12,7 @@ import java.util.Date;
  */
 
 @IgnoreExtraProperties
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class FacebookPost extends Post {
     public String postId;
     public String url;
@@ -37,8 +38,7 @@ public class FacebookPost extends Post {
     }
 
     public FacebookPost(@NonNull String userId, @NonNull Date date, @NonNull String postId, @Nullable String message, @Nullable String story) {
-        super(userId, date);
-        this.postId = postId;
+        this(userId, date, postId);
         this.message = message;
         this.story = story;
     }

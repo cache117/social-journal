@@ -6,20 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.support.annotation.NonNull;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
+import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -38,9 +33,7 @@ import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import java.util.List;
 
 import edu.byu.cs456.journall.social_journal.R;
-import edu.byu.cs456.journall.social_journal.activities.login.LoginActivity;
 import edu.byu.cs456.journall.social_journal.activities.login.LoginCallback;
-import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -54,15 +47,15 @@ import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
-    public static final String TAG = SettingsActivity.class.getCanonicalName();
+    private static final String TAG = SettingsActivity.class.getCanonicalName();
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private TwitterAuthClient mTwitterAuthClient;
 
-    public static final String CONNECT_TO_FACEBOOK = "connect_to_facebook";
-    public static final String CONNECT_TO_TWITTER = "connect_to_twitter";
-    public static final String CONNECT_TO_INSTAGRAM = "connect_to_instagram";
+    private static final String CONNECT_TO_FACEBOOK = "connect_to_facebook";
+    private static final String CONNECT_TO_TWITTER = "connect_to_twitter";
+    private static final String CONNECT_TO_INSTAGRAM = "connect_to_instagram";
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -136,8 +129,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                             Log.w(TAG, "twitterLogin:failure", exception);
                         }
                     });
-                }
-                else {
+                } else {
                     TwitterCore.getInstance().getSessionManager().clearActiveSession();
                 }
                 break;
@@ -254,7 +246,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
      * activity is showing a two-pane settings UI.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment{
+    public static class GeneralPreferenceFragment extends PreferenceFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -304,10 +296,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         }
     }
 
-    private boolean isUsingInstagram() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        return sharedPref.getBoolean("connect_to_instagram", false);
-    }
+//    private boolean isUsingInstagram() {
+//        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+//        return sharedPref.getBoolean("connect_to_instagram", false);
+//    }
 
     private boolean isUsingFacebook() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);

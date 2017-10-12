@@ -11,6 +11,7 @@ import java.util.Date;
  */
 
 @IgnoreExtraProperties
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Post implements Comparable<Post> {
     public String userId;
     public Date date;

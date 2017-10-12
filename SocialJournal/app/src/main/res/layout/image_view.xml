@@ -23,7 +23,7 @@
             android:id="@+id/image_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/image_view_descr" />
+            android:contentDescription="@string/image_view_description" />
 
     </android.support.v7.widget.CardView>
 

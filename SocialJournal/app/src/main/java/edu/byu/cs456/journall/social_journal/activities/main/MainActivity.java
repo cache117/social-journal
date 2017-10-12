@@ -38,13 +38,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.instagram.instagramapi.engine.InstagramEngine;
-import com.instagram.instagramapi.exceptions.InstagramException;
-import com.instagram.instagramapi.interfaces.InstagramAPIResponseCallback;
-import com.instagram.instagramapi.objects.IGPagInfo;
-import com.instagram.instagramapi.objects.IGUser;
+// import com.instagram.instagramapi.engine.InstagramEngine;
+// import com.instagram.instagramapi.exceptions.InstagramException;
+// import com.instagram.instagramapi.interfaces.InstagramAPIResponseCallback;
+// import com.instagram.instagramapi.objects.IGPagInfo;
+// import com.instagram.instagramapi.objects.IGUser;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
@@ -80,14 +81,19 @@ import edu.byu.cs456.journall.social_journal.models.post.NotePost;
 import edu.byu.cs456.journall.social_journal.models.post.Post;
 import edu.byu.cs456.journall.social_journal.models.post.PostComparatorByDate;
 
-
+/**
+ * The Main Activity for Social Journal.
+ *
+ * @author Cache Staheli
+ * @author Michael Call
+ */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private final String TAG = MainActivity.class.getCanonicalName();
-    static final int SELECT_IMAGE = 1;
-    static final int SELECT_DATE = 2;
-    static final int ADD_NOTE = 3;
-    static final int INSTAGRAM = 4;
+    private static final int SELECT_IMAGE = 1;
+    private static final int SELECT_DATE = 2;
+    private static final int ADD_NOTE = 3;
+    //static final int INSTAGRAM = 4;
 
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
 
@@ -100,7 +106,7 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private String mPhotoUrl;
-    private InstagramEngine instagramEngine;
+    //private InstagramEngine instagramEngine;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,10 +136,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean isUsingInstagram() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        return sharedPref.getBoolean("connect_to_instagram", false);
-    }
+//    private boolean isUsingInstagram() {
+//        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+//        return sharedPref.getBoolean("connect_to_instagram", false);
+//    }
 
     private boolean isUsingFacebook() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -153,7 +159,9 @@ public class MainActivity extends AppCompatActivity
         ActionBar ab = getSupportActionBar();
 
         // Enable the Up button
-        ab.setDisplayHomeAsUpEnabled(true);
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
         return toolbar;
     }
 
@@ -207,24 +215,24 @@ public class MainActivity extends AppCompatActivity
         editor.apply();
     }
 
-    private class InstagramUserIdCallback implements InstagramAPIResponseCallback<IGUser> {
-        private DatabaseReference user;
-
-        InstagramUserIdCallback(DatabaseReference user) {
-            this.user = user;
-        }
-
-        @Override
-        public void onResponse(IGUser responseObject, IGPagInfo pageInfo) {
-            String instagramId = responseObject.getId();
-            user.child("instagram").setValue(instagramId);
-        }
-
-        @Override
-        public void onFailure(InstagramException exception) {
-            Log.w("MainActivity", "Exception:" + exception.getMessage());
-        }
-    }
+//    private class InstagramUserIdCallback implements InstagramAPIResponseCallback<IGUser> {
+//        private final DatabaseReference user;
+//
+//        InstagramUserIdCallback(DatabaseReference user) {
+//            this.user = user;
+//        }
+//
+//        @Override
+//        public void onResponse(IGUser responseObject, IGPagInfo pageInfo) {
+//            String instagramId = responseObject.getId();
+//            user.child("instagram").setValue(instagramId);
+//        }
+//
+//        @Override
+//        public void onFailure(InstagramException exception) {
+//            Log.w("MainActivity", "Exception:" + exception.getMessage());
+//        }
+//    }
 
     private void onBoarding() {
         final String uid = mFirebaseUser.getUid();
@@ -292,7 +300,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private class ImportExistingTwitterPostsCallback extends Callback<List<Tweet>> {
-        private String uid;
+        private final String uid;
 
         ImportExistingTwitterPostsCallback(String uid) {
             this.uid = uid;
@@ -332,7 +340,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private class ImportExistingFacebookPostsCallback implements GraphRequest.Callback {
-        private String uid;
+        private final String uid;
 
         ImportExistingFacebookPostsCallback(String uid) {
             this.uid = uid;
@@ -467,22 +475,22 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        if (id == R.id.action_settings) {
-//            openSettings();
-//            return true;
-//        }
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+////        int id = item.getItemId();
+////
+////        if (id == R.id.action_settings) {
+////            openSettings();
+////            return true;
+////        }
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         switch (id) {
@@ -704,10 +712,20 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             String uid = mFirebaseUser.getUid();
                             @SuppressWarnings("VisibleForTests")
-                            ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, task.getResult().getMetadata().getDownloadUrl().toString());
-                            image.key = key;
+                            StorageMetadata metadata = task.getResult().getMetadata();
+                            if (metadata != null) {
+                                Uri downloadUrl = metadata.getDownloadUrl();
+                                if (downloadUrl != null) {
+                                    ImagePost image = new ImagePost(uid, new Date(), mPhotoUrl, downloadUrl.toString());
+                                    image.key = key;
 
-                            mDatabase.getReference().child("posts").child(uid).child("images").child(key).setValue(image);
+                                    mDatabase.getReference().child("posts").child(uid).child("images").child(key).setValue(image);
+                                } else {
+                                    Log.w(TAG, "URI was null. That's pretty bad.");
+                                }
+                            } else {
+                                Log.w(TAG, "Meta Data was null. That's pretty bad.");
+                            }
                         } else {
                             Log.w(TAG, "Image upload task was not successful.", task.getException());
                         }
@@ -765,7 +783,7 @@ public class MainActivity extends AppCompatActivity
         return closestIndex;
     }
 
-    public void attachPostListeners() {
+    private void attachPostListeners() {
         final String uid = mFirebaseUser.getUid();
         mDatabase.getReference("posts/" + uid + "/facebook_posts").addChildEventListener(new FacebookChildEventListener());
         mDatabase.getReference("posts/" + uid + "/images").addChildEventListener(new ImageChildEventListener());

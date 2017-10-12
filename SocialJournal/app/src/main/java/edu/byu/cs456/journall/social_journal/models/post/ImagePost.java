@@ -9,6 +9,7 @@ import java.util.Date;
  */
 
 @IgnoreExtraProperties
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class ImagePost extends Post {
     public String photoUrl;
     public String imageUrl;
@@ -49,6 +50,9 @@ public class ImagePost extends Post {
         return result;
     }
 
+//    /**
+//     * @deprecated This isn't used anymore. Images are downloaded differently now.
+//     */
     //    @Override
 //    public String toString() {
 //        String imageAsString = bitMapToString(image);
@@ -56,6 +60,9 @@ public class ImagePost extends Post {
 //        return preface + imageAsString;
 //    }
 //
+//    /**
+//     * @deprecated This isn't used anymore. Images are downloaded differently now.
+//     */
 //    private String bitMapToString(Bitmap bitmap) {
 //        ByteArrayOutputStream baos = new ByteArrayOutputStream();
 //        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);

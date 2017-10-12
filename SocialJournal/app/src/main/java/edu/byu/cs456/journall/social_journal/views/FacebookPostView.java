@@ -14,7 +14,7 @@ import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
 /**
  * The view for a Facebook Post.
  */
-
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class FacebookPostView extends LinearLayout {
 
     private FacebookPost facebookPost;
@@ -25,22 +25,22 @@ public class FacebookPostView extends LinearLayout {
     private ImageView imageView;
     private TextView messageView;
 
-    public FacebookPostView(Context context){
+    public FacebookPostView(Context context) {
         super(context);
         init(context);
     }
 
-    public FacebookPostView(Context context, AttributeSet attributeSet){
+    public FacebookPostView(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
         init(context);
     }
 
-    public FacebookPostView(Context context, AttributeSet attributeSet, int defStyle){
+    public FacebookPostView(Context context, AttributeSet attributeSet, int defStyle) {
         super(context, attributeSet, defStyle);
         init(context);
     }
 
-    private void init(Context context){
+    private void init(Context context) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.facebook_post_view, this);
 
@@ -49,32 +49,32 @@ public class FacebookPostView extends LinearLayout {
     }
 
     //I don't know if we'll use the FacebookPost object or not....
-    public void setFacebookPost(FacebookPost post){
+    public void setFacebookPost(FacebookPost post) {
         this.facebookPost = post;
     }
 
-    public FacebookPost getFacebookPost(){
+    public FacebookPost getFacebookPost() {
         return facebookPost;
     }
 
-    public void setTitle(String title){
+    public void setTitle(String title) {
         this.title = title;
     }
 
-    public String getTitle(){
+    public String getTitle() {
         return title;
     }
 
-    public void setImage(Bitmap image){
+    public void setImage(Bitmap image) {
         this.image = image;
     }
 
-    public Bitmap getImage(){
+    public Bitmap getImage() {
         return image;
     }
 
     @Override
-    protected void onFinishInflate(){
+    protected void onFinishInflate() {
         super.onFinishInflate();
 
         titleView = (TextView) this.findViewById(R.id.facebook_post_status);

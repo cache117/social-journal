@@ -9,6 +9,7 @@ import java.util.Date;
  */
 
 @IgnoreExtraProperties
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class NotePost extends Post {
     public String title;
     public String body;

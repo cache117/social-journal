@@ -16,17 +16,21 @@ import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.tweetui.CompactTweetView;
+import com.twitter.sdk.android.tweetui.TweetUtils;
 
 import java.util.List;
 
 import edu.byu.cs456.journall.social_journal.R;
-import edu.byu.cs456.journall.social_journal.activities.main.MainActivity;
 import edu.byu.cs456.journall.social_journal.models.post.FacebookPost;
 import edu.byu.cs456.journall.social_journal.models.post.ImagePost;
 import edu.byu.cs456.journall.social_journal.models.post.NotePost;
@@ -34,19 +38,12 @@ import edu.byu.cs456.journall.social_journal.models.post.Post;
 import edu.byu.cs456.journall.social_journal.models.post.TwitterPost;
 import edu.byu.cs456.journall.social_journal.models.post.WebPost;
 
-import com.bumptech.glide.Glide;
-import com.twitter.sdk.android.core.Callback;
-import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.TwitterException;
-import com.twitter.sdk.android.core.models.Tweet;
-import com.twitter.sdk.android.tweetui.CompactTweetView;
-import com.twitter.sdk.android.tweetui.TweetUtils;
-import com.twitter.sdk.android.tweetui.TweetView;
-
 /**
- * Created by Michael on 3/27/2017.
+ * A class to support putting various posts into a RecyclerView
+ *
+ * @author Michael Call
+ * @author Cache Staheli
  */
-
 public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdapter.ViewHolder> {
     private final static int WEB_POST = 0;
     private final static int TEXT_POST = 1;
@@ -55,13 +52,8 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     private final static int TWITTER_POST = 4;
 
     private List<Post> mDataset;
-    private Context mContext;
-    private FirebaseUser mFirebaseUser;
+    private final Context mContext;
     private static final String TAG = SocialJournalAdapter.class.getCanonicalName();
-
-    public SocialJournalAdapter() {
-        mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-    }
 
 
     // Provide a reference to the views for each data item
@@ -71,8 +63,8 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     /**
      * ViewHolder is a parent class to all other ViewHolder objects
      */
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ViewHolder(View v) {
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        ViewHolder(View v) {
             super(v);
         }
     }
@@ -80,10 +72,10 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     /**
      * WebViewHolder is for Facebook posts and inserts an iframe into a WebView
      */
-    public static class WebViewHolder extends SocialJournalAdapter.ViewHolder {
-        public WebView mWebView;
+    private static class WebViewHolder extends SocialJournalAdapter.ViewHolder {
+        final WebView mWebView;
 
-        public WebViewHolder(View v) {
+        WebViewHolder(View v) {
             super(v);
             mWebView = (WebView) v.findViewById(R.id.web_view);
         }
@@ -93,12 +85,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
      * NoteViewHolder is for notes made in the app by the user.
      * Contains a Title, a Date, and a Body
      */
-    public static class NoteViewHolder extends SocialJournalAdapter.ViewHolder {
-        public TextView mTitle;
-        public TextView mDate;
-        public TextView mBody;
+    private static class NoteViewHolder extends SocialJournalAdapter.ViewHolder {
+        final TextView mTitle;
+        final TextView mDate;
+        final TextView mBody;
 
-        public NoteViewHolder(View v) {
+        NoteViewHolder(View v) {
             super(v);
             mTitle = (TextView) v.findViewById(R.id.text_view_title);
             mDate = (TextView) v.findViewById(R.id.text_view_date);
@@ -109,23 +101,26 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
     /**
      * ImageViewHolder is for images inserted from the device
      */
-    public static class ImageViewHolder extends SocialJournalAdapter.ViewHolder {
-        public ImageView mImageView;
+    private static class ImageViewHolder extends SocialJournalAdapter.ViewHolder {
+        final ImageView mImageView;
 
-        public ImageViewHolder(View v) {
+        ImageViewHolder(View v) {
             super(v);
             mImageView = (ImageView) v.findViewById(R.id.image_view);
         }
     }
 
-    public static class FacebookViewHolder extends SocialJournalAdapter.ViewHolder {
-        public ImageView mProfilePicture;
-        public TextView mStatus;
-        public TextView mDate;
-        public TextView mMessage;
-        public ImageView mAttachmentImage;
+    /**
+     * A class to hold the information for a facebook post, since there isn't a delivered one.
+     */
+    private static class FacebookViewHolder extends SocialJournalAdapter.ViewHolder {
+        final ImageView mProfilePicture;
+        final TextView mStatus;
+        final TextView mDate;
+        final TextView mMessage;
+        final ImageView mAttachmentImage;
 
-        public FacebookViewHolder(View v) {
+        FacebookViewHolder(View v) {
             super(v);
             mProfilePicture = (ImageView) v.findViewById(R.id.facebook_post_profile_picture);
             mStatus = (TextView) v.findViewById(R.id.facebook_post_status);
@@ -135,19 +130,27 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         }
     }
 
-    public static class TwitterViewHolder extends SocialJournalAdapter.ViewHolder {
-//        public TweetView mTweetView;
-        public CardView mCardView;
-        public TwitterViewHolder(View v) {
+    /**
+     * A wrapper class for Tweets. This assists in displaying Tweets natively in a RecyclerView.
+     */
+    private static class TwitterViewHolder extends SocialJournalAdapter.ViewHolder {
+        final CardView mCardView;
+
+        TwitterViewHolder(View v) {
             super(v);
-//            mTweetView = (TweetView) v.findViewById(R.id.tweet_view);
             mCardView = (CardView) v.findViewById(R.id.twitter_card_view);
         }
     }
 
-    // Provide a suitable constructor (depends on the kind of dataset)
+    /**
+     * Instantiates this RecyclerView Adapter with a list of posts and the Context of the
+     * RecyclerView (probably MainActivity).
+     *
+     * @param myDataset the list of posts to use for the Adapter.
+     * @param context   the Context for the RecyclerView. This is required by various aspects of the
+     *                  RecyclerView and the Adapter.
+     */
     public SocialJournalAdapter(List<Post> myDataset, Context context) {
-        this();
         mDataset = myDataset;
         mContext = context;
     }
@@ -206,12 +209,22 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
             case FACEBOOK_POST:
                 handleFacebookPost(holder, post);
                 break;
+            //Tweet
             case TWITTER_POST:
                 handleTweet(holder, post);
                 break;
         }
     }
 
+    /**
+     * Handles adding a tweet to the view.
+     *
+     * @param holder the holder for hte tweet.
+     * @param post   the post that contains the Id for the tweet.
+     * @see CompactTweetView
+     * @see TweetUtils#loadTweet(long, Callback)
+     * @see Tweet
+     */
     private void handleTweet(ViewHolder holder, Post post) {
         final TwitterViewHolder twitterViewHolder = (TwitterViewHolder) holder;
         TwitterPost twitterPost = (TwitterPost) post;
@@ -229,6 +242,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         });
     }
 
+    /**
+     * Handles adding a Facebook post to the view.
+     *
+     * @param holder the holder for the post.
+     * @param post   the post that contains the information about the Facebook post.
+     */
     private void handleFacebookPost(ViewHolder holder, Post post) {
         FacebookViewHolder facebookViewHolder = (FacebookViewHolder) holder;
         FacebookPost facebookPost = (FacebookPost) post;
@@ -249,6 +268,14 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         }
     }
 
+    /**
+     * Handles adding a Facebook Iframe Web post to the view.
+     *
+     * @param holder the holder for the post.
+     * @param post   the post that contains the information about the Facebook post.
+     * @deprecated This shouldn't really be used. This was a precursor for Facebook posts. Those now
+     * are implemented separately using the Facebook API.
+     */
     private void handleWebPost(ViewHolder holder, Post post) {
         WebViewHolder webViewHolder = (WebViewHolder) holder;
         WebPost webPost = (WebPost) post;
@@ -256,6 +283,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         webViewHolder.mWebView.loadDataWithBaseURL("https://facebook.com", webPost.toString(), "text/html", "utf-8", null);
     }
 
+    /**
+     * Handles adding a user note to the view.
+     *
+     * @param holder the holder for the note.
+     * @param post   the post that contains the information about the note.
+     */
     private void handleNotePost(ViewHolder holder, Post post) {
         NoteViewHolder noteViewHolder = (NoteViewHolder) holder;
         NotePost notePost = (NotePost) post;
@@ -269,6 +302,13 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         noteViewHolder.mBody.setText(body);
     }
 
+    /**
+     * Handles adding an image to the view. This will download the image.
+     *
+     * @param holder the holder for the image.
+     * @param post   the post that contains the image url for the image.
+     * @see SocialJournalAdapter.ImageDownloadOnCompleteListener
+     */
     private void handleImagePost(ViewHolder holder, Post post) {
         final ImageViewHolder imageViewHolder = (ImageViewHolder) holder;
         ImagePost imagePost = (ImagePost) post;
@@ -280,8 +320,13 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         }
     }
 
+    /**
+     * Used for downloading images to be displayed in ImagePosts.
+     *
+     * @see SocialJournalAdapter#handleImagePost(ViewHolder, Post)
+     */
     private class ImageDownloadOnCompleteListener implements OnCompleteListener<Uri> {
-        private ImageViewHolder imageViewHolder;
+        private final ImageViewHolder imageViewHolder;
 
         ImageDownloadOnCompleteListener(ImageViewHolder imageViewHolder) {
             this.imageViewHolder = imageViewHolder;
@@ -316,6 +361,12 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         }
     }
 
+    /**
+     * Used to set the scale for Facebook WebPosts.
+     *
+     * @return the integer scale value.
+     * @deprecated Facebook WebPosts are deprecated. This isn't needed for Facebook Posts.
+     */
     private int getScale() {
         WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -323,7 +374,7 @@ public class SocialJournalAdapter extends RecyclerView.Adapter<SocialJournalAdap
         Point size = new Point();
         display.getSize(size);
         int width = size.x;
-        Double val = new Double(width) / new Double(484);
+        Double val = (double) width / 484d;
         val = val * 100d;
         return val.intValue();
     }

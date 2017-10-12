@@ -1,9 +1,7 @@
 package edu.byu.cs456.journall.social_journal.models.post;
 
 import com.google.firebase.database.IgnoreExtraProperties;
-import com.twitter.sdk.android.core.models.Tweet;
 
-import java.text.ParseException;
 import java.util.Date;
 
 /**
@@ -11,13 +9,14 @@ import java.util.Date;
  */
 
 @IgnoreExtraProperties
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class TwitterPost extends Post {
     public long tweetId;
 
     public TwitterPost() {
     }
 
-    public TwitterPost(String userId, Date date, long tweetId) throws ParseException {
+    public TwitterPost(String userId, Date date, long tweetId) {
         super(userId, date);
         this.tweetId = tweetId;
     }

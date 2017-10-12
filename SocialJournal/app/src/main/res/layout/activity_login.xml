@@ -13,8 +13,9 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:id="@+id/appImage"
-        android:src="@mipmap/ic_launcher_round"/>
+        android:id="@+id/app_image"
+        android:src="@mipmap/ic_launcher_round"
+        android:contentDescription="@string/app_image_description" />
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/button_facebook_login"

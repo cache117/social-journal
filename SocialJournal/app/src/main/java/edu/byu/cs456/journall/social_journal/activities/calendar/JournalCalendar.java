@@ -2,6 +2,7 @@ package edu.byu.cs456.journall.social_journal.activities.calendar;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -27,7 +28,9 @@ public class JournalCalendar extends AppCompatActivity {
         ActionBar ab = getSupportActionBar();
 
         // Enable the Up button
-        ab.setDisplayHomeAsUpEnabled(true);
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
         initializeCalendar();
     }
 
@@ -36,7 +39,7 @@ public class JournalCalendar extends AppCompatActivity {
         calendar.setFirstDayOfWeek(1); //SUNDAY
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
-            public void onSelectedDayChange(CalendarView view, int year, int month, int day) {
+            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int day) {
                 navigateToDate(year, month, day);
             }
         });
