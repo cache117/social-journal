@@ -18,7 +18,14 @@ import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.TwitterAuthProvider;
@@ -30,9 +37,11 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 
+import java.util.Arrays;
 import java.util.List;
 
 import edu.byu.cs456.journall.social_journal.R;
+import edu.byu.cs456.journall.social_journal.activities.login.LoginActivity;
 import edu.byu.cs456.journall.social_journal.activities.login.LoginCallback;
 
 /**
@@ -52,6 +61,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private TwitterAuthClient mTwitterAuthClient;
+    private CallbackManager mCallbackManager;
 
     private static final String CONNECT_TO_FACEBOOK = "connect_to_facebook";
     private static final String CONNECT_TO_TWITTER = "connect_to_twitter";
@@ -106,6 +116,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Pass the activity result back to the Facebook SDK
+        mCallbackManager.onActivityResult(requestCode, resultCode, data);
+
+        // Pass the activity result to Twitter
         mTwitterAuthClient.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -113,6 +127,28 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         switch (key) {
             case CONNECT_TO_FACEBOOK:
+                if (isUsingFacebook()) {
+                    LoginManager.getInstance().registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+                        @Override
+                        public void onSuccess(LoginResult loginResult) {
+                            Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                            handleFacebookAccessToken(loginResult.getAccessToken());
+                        }
+
+                        @Override
+                        public void onCancel() {
+                            Log.i(TAG, "facebook:onCancel");
+                        }
+
+                        @Override
+                        public void onError(FacebookException error) {
+                            Log.w(TAG, "facebook:onError", error);
+                        }
+                    });
+                }
+                else {
+                    LoginManager.getInstance().logOut();
+                }
                 break;
             case CONNECT_TO_TWITTER:
                 if (isUsingTwitter()) {
@@ -147,6 +183,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             mAuth.getCurrentUser()
                     .linkWithCredential(credential)
                     .addOnCompleteListener(this, new LoginCallback(this, true, "connect_to_twitter"));
+        }
+    }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+        Log.d(TAG, "handleFacebookAccessToken:" + token);
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        if (mAuth.getCurrentUser() == null) {
+            mAuth.signInWithCredential(credential)
+                    .addOnCompleteListener(this, new LoginCallback(this, false, "connect_to_facebook"));
+        } else {
+            mAuth.getCurrentUser()
+                    .linkWithCredential(credential)
+                    .addOnCompleteListener(this, new LoginCallback(this, true, "connect_to_facebook"));
         }
     }
 
@@ -185,9 +235,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        initializeFacebookLogin();
+        initializeTwitterLogin();
+        initializeFirebaseAuth();
+    }
+
+    private void initializeFacebookLogin() {
+        mCallbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("email", "public_profile", "user_posts", "user_photos"));
+    }
+
+    private void initializeTwitterLogin() {
         Twitter.initialize(this);
         mTwitterAuthClient = new TwitterAuthClient();
-        initializeFirebaseAuth();
     }
 
     @Override
